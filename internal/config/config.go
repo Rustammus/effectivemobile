@@ -10,7 +10,8 @@ import (
 
 type Config struct {
 	Server struct {
-		Port string `yaml:"port" env:"APP_PORT"`
+		Port        string `yaml:"port" env:"APP_PORT"`
+		ExternalURL string `yaml:"external_url" env:"APP_EXTERNAL_URL"`
 	} `yaml:"server"`
 	Storage `yaml:"storage"`
 }

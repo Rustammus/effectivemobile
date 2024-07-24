@@ -14,5 +14,5 @@ func Run() {
 	config := conf.GetConfig()
 	config.Storage.Host = "dasd"
 	repositores := repos.NewRepositories(crud.ConnPool)
-
+	
 }

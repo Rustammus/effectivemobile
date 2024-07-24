@@ -6,11 +6,11 @@ import (
 )
 
 type Repositories struct {
-	User PeopleRepository
+	People PeopleRepository
 }
 
 func NewRepositories(pool *pgxpool.Pool) *Repositories {
 	return &Repositories{
-		User: crud.NewPeopleCRUD(pool),
+		People: crud.NewPeopleCRUD(pool),
 	}
 }
