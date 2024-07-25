@@ -4,8 +4,6 @@ import (
 	"EffectiveMobile/internal/dto"
 	"EffectiveMobile/pkg/client/postgres"
 	"context"
-	"errors"
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -14,7 +12,6 @@ type PeopleCRUD struct {
 }
 
 func (p PeopleCRUD) Create(ctx context.Context, dto dto.CreatePeopleDTO) (pgtype.UUID, error) {
-	//TODO implement me
 	q := `INSERT INTO peoples 
     (passport_serie, passport_number, surname, name, patronymic, address)
     VALUES ($1, $2, $3, $4, $5, $6)
@@ -50,7 +47,6 @@ func (p PeopleCRUD) FindAll(ctx context.Context) ([]dto.ReadPeopleDTO, error) {
 }
 
 func (p PeopleCRUD) FindByUUID(ctx context.Context, uuid pgtype.UUID) (dto.ReadPeopleDTO, error) {
-	//TODO implement me
 	q := `SELECT uuid, passport_serie, passport_number, surname, name, patronymic, address, updated_at, created_at FROM peoples WHERE uuid=$1`
 	people := dto.ReadPeopleDTO{}
 	err := p.client.QueryRow(ctx, q, uuid).Scan(&people.UUID, &people.PassportSerie, &people.PassportNumber,
@@ -61,8 +57,11 @@ func (p PeopleCRUD) FindByUUID(ctx context.Context, uuid pgtype.UUID) (dto.ReadP
 	return dto.ReadPeopleDTO{}, nil
 }
 
+func (p PeopleCRUD) FindByFilter() {
+	//TODO
+}
+
 func (p PeopleCRUD) Update(ctx context.Context, people dto.UpdatePeopleDTO, uuid pgtype.UUID) (dto.ReadPeopleDTO, error) {
-	//TODO implement me
 	q := `UPDATE peoples 
 			SET (passport_serie, passport_number, surname, name, patronymic, address) = ($2, $3, $4, $5, $6, $7) 
 			WHERE uuid=$1 
@@ -79,15 +78,14 @@ func (p PeopleCRUD) Update(ctx context.Context, people dto.UpdatePeopleDTO, uuid
 	return rPeople, nil
 }
 
-func (p PeopleCRUD) Delete(ctx context.Context, uuid pgtype.UUID) error {
-	//TODO implement me
-	q := `DELETE FROM peoples WHERE uuid=$1`
-	row := p.client.QueryRow(ctx, q, uuid)
-	err := row.Scan()
-	if errors.Is(err, pgx.ErrNoRows) {
-		return nil
+func (p PeopleCRUD) Delete(ctx context.Context, uuid pgtype.UUID) (pgtype.UUID, error) {
+	q := `DELETE FROM peoples WHERE uuid=$1	RETURNING uuid`
+	delUUID := pgtype.UUID{}
+	err := p.client.QueryRow(ctx, q, uuid).Scan(&delUUID)
+	if err != nil {
+		return pgtype.UUID{}, err
 	}
-	return err
+	return delUUID, nil
 }
 
 func NewPeopleCRUD(client postgres.Client) *PeopleCRUD {

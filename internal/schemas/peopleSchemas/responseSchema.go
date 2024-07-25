@@ -1,4 +1,4 @@
-package people
+package peopleSchemas
 
 import "github.com/jackc/pgx/v5/pgtype"
 
