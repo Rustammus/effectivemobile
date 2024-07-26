@@ -10,7 +10,6 @@ type People struct {
 	Name           string             `json:"name" example:"Иван"`
 	Patronymic     string             `json:"patronymic" example:"Иванович"`
 	Address        string             `json:"address" example:"г. Москва, ул. Ленина, д. 5, кв. 1"`
-	IsDeleted      bool               `json:"isDeleted" example:"false"`
 	UpdatedAt      pgtype.Timestamptz `json:"updatedAt" example:"2020-01-01T00:00:00Z"`
 	CreatedAt      pgtype.Timestamptz `json:"createdAt" example:"2020-01-01T00:00:00Z"`
 }

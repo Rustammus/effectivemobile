@@ -2,6 +2,7 @@ package peopleService
 
 import (
 	"EffectiveMobile/internal/config"
+	"EffectiveMobile/internal/crud"
 	"EffectiveMobile/internal/dto"
 	"EffectiveMobile/internal/repos"
 	"EffectiveMobile/internal/schemas/externalApi"
@@ -81,4 +82,86 @@ func (r *PeopleService) requestPeopleInfo(passportSerie, passportNumber int) (ex
 	}
 
 	return people, nil
+}
+
+func (r *PeopleService) FindByUUID(uuid pgtype.UUID) (dto.ReadPeopleDTO, error) {
+	people, err := r.Repo.FindByUUID(context.TODO(), uuid)
+	if err != nil {
+		return dto.ReadPeopleDTO{}, err
+	}
+	return people, nil
+}
+
+func (r *PeopleService) FindAll() ([]dto.ReadPeopleDTO, error) {
+	peoples, err := r.Repo.FindAll(context.TODO())
+	if err != nil {
+		return nil, err
+	}
+	return peoples, nil
+}
+
+func (r *PeopleService) FindAllByOffset(pag crud.Pagination) ([]dto.ReadPeopleDTO, crud.Pagination, error) {
+	peoples, err := r.Repo.FindAllByOffset(context.TODO(), pag)
+	if err != nil {
+		return []dto.ReadPeopleDTO{}, crud.Pagination{}, err
+	}
+
+	pag.Offset += pag.Limit
+
+	return peoples, pag, nil
+}
+
+func (r *PeopleService) FindByFilterOffset(f peopleSchemas.RequestFilterPeople, pag crud.Pagination) ([]dto.ReadPeopleDTO, crud.Pagination, error) {
+	if f.UUID.Valid {
+		people, err := r.Repo.FindByUUID(context.TODO(), f.UUID)
+		ppls := make([]dto.ReadPeopleDTO, 0)
+		ppls = append(ppls, people)
+		pag.Offset = 0
+		pag.Limit = 1
+		return ppls, pag, err
+	}
+
+	filter := dto.FilterPeopleDTO{
+		UUID:           f.UUID,
+		PassportSerie:  f.PassportSerie,
+		PassportNumber: f.PassportNumber,
+		Surname:        f.Surname,
+		Name:           f.Name,
+		Patronymic:     f.Patronymic,
+		Address:        f.Address,
+	}
+
+	peoples, err := r.Repo.FindByFilterOffset(context.TODO(), filter, pag)
+	if err != nil {
+		return nil, crud.Pagination{}, err
+	}
+
+	pag.Offset += pag.Limit
+
+	return peoples, pag, nil
+}
+
+func (r *PeopleService) UpdateByUUID(uuid pgtype.UUID, p peopleSchemas.RequestUpdatePeople) (dto.ReadPeopleDTO, error) {
+	updateDTO := dto.UpdatePeopleDTO{
+		PassportSerie:  p.PassportSerie,
+		PassportNumber: p.PassportNumber,
+		Surname:        p.Surname,
+		Name:           p.Name,
+		Patronymic:     p.Patronymic,
+		Address:        p.Address,
+	}
+
+	rPeople, err := r.Repo.Update(context.TODO(), uuid, updateDTO)
+	if err != nil {
+		return dto.ReadPeopleDTO{}, err
+	}
+	return rPeople, nil
+}
+
+func (r *PeopleService) DeleteByUUID(uuid pgtype.UUID) (pgtype.UUID, error) {
+	rUUID, err := r.Repo.Delete(context.TODO(), uuid)
+	if err != nil {
+		return pgtype.UUID{}, err
+	}
+	return rUUID, nil
 }

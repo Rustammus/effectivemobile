@@ -4,6 +4,7 @@ import (
 	conf "EffectiveMobile/internal/config"
 	"EffectiveMobile/internal/crud"
 	"EffectiveMobile/internal/repos"
+	"EffectiveMobile/internal/service"
 	"EffectiveMobile/pkg/logging"
 )
 
@@ -14,5 +15,6 @@ func Run() {
 	config := conf.GetConfig()
 	config.Storage.Host = "dasd"
 	repositores := repos.NewRepositories(crud.ConnPool)
-	
+	allService := service.NewServices(service.Deps{Repos: repositores})
+
 }

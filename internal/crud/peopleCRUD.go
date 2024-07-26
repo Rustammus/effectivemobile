@@ -4,12 +4,19 @@ import (
 	"EffectiveMobile/internal/dto"
 	"EffectiveMobile/pkg/client/postgres"
 	"context"
+	"errors"
 	"fmt"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type PeopleCRUD struct {
 	client postgres.Client
+}
+
+type Pagination struct {
+	Offset    int
+	Limit     int
+	Timestamp pgtype.Timestamptz
 }
 
 func (c PeopleCRUD) Create(ctx context.Context, dto dto.CreatePeopleDTO) (pgtype.UUID, error) {
@@ -48,6 +55,30 @@ func (c PeopleCRUD) FindAll(ctx context.Context) ([]dto.ReadPeopleDTO, error) {
 	return peoples, nil
 }
 
+func (c PeopleCRUD) FindAllByOffset(ctx context.Context, pag Pagination) ([]dto.ReadPeopleDTO, error) {
+	q := `SELECT uuid, passport_serie, passport_number, surname, name, patronymic, address, updated_at, created_at 
+		  FROM public.people 
+		  OFFSET $1 LIMIT $2`
+
+	peoples := make([]dto.ReadPeopleDTO, 0)
+	rows, err := c.client.Query(ctx, q, pag.Offset, pag.Limit)
+	defer rows.Close()
+	if err != nil {
+		return peoples, err
+	}
+	for rows.Next() {
+		people := dto.ReadPeopleDTO{}
+		err = rows.Scan(&people.UUID, &people.PassportSerie, &people.PassportNumber, &people.Surname,
+			&people.Name, &people.Patronymic, &people.Address, &people.UpdatedAt, &people.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		peoples = append(peoples, people)
+	}
+
+	return peoples, nil
+}
+
 func (c PeopleCRUD) FindByUUID(ctx context.Context, uuid pgtype.UUID) (dto.ReadPeopleDTO, error) {
 	q := `SELECT uuid, passport_serie, passport_number, surname, name, patronymic, address, updated_at, created_at 
 		  FROM public.peoples 
@@ -61,9 +92,11 @@ func (c PeopleCRUD) FindByUUID(ctx context.Context, uuid pgtype.UUID) (dto.ReadP
 	return dto.ReadPeopleDTO{}, nil
 }
 
-func (c PeopleCRUD) FindByFilter(ctx context.Context, filter dto.FilterPeopleDTO) ([]dto.ReadPeopleDTO, error) {
-	query := `SELECT uuid, passport_serie, passport_number, surname, name, patronymic, address, updated_at, created_at FROM public.peoples WHERE`
+func (c PeopleCRUD) FindByFilterOffset(ctx context.Context, filter dto.FilterPeopleDTO, pag Pagination) ([]dto.ReadPeopleDTO, error) {
+	query := `SELECT uuid, passport_serie, passport_number, surname, name, patronymic, address, updated_at, created_at 
+			  FROM public.peoples WHERE`
 
+	//TODO Возможно, вынести в service
 	if filter.UUID.Valid {
 		people, err := c.FindByUUID(ctx, filter.UUID)
 		ppls := make([]dto.ReadPeopleDTO, 0)
@@ -72,7 +105,6 @@ func (c PeopleCRUD) FindByFilter(ctx context.Context, filter dto.FilterPeopleDTO
 	}
 
 	//TODO refactor me!
-
 	values := make([]any, 0)
 	counter := 0
 	if filter.PassportSerie >= 0 {
@@ -107,9 +139,13 @@ func (c PeopleCRUD) FindByFilter(ctx context.Context, filter dto.FilterPeopleDTO
 	}
 
 	if counter <= 0 {
-		return nil, nil
+		return nil, errors.New("empty values in filter")
 	}
 	query = query[:len(query)-4]
+
+	counter += 2
+	query = fmt.Sprintf("%s OFFSET $%d LIMIT $%d", query, counter-1, counter)
+	values = append(values, pag.Offset, pag.Limit)
 
 	rows, err := c.client.Query(ctx, query, values...)
 	defer rows.Close()
@@ -118,7 +154,7 @@ func (c PeopleCRUD) FindByFilter(ctx context.Context, filter dto.FilterPeopleDTO
 	}
 	peoples := make([]dto.ReadPeopleDTO, 0)
 	for rows.Next() {
-		var people dto.ReadPeopleDTO
+		people := dto.ReadPeopleDTO{}
 		err = rows.Scan(&people.UUID, &people.PassportSerie, &people.PassportNumber, &people.Surname,
 			&people.Name, &people.Patronymic, &people.Address, &people.UpdatedAt, &people.CreatedAt)
 		if err != nil {
@@ -126,10 +162,11 @@ func (c PeopleCRUD) FindByFilter(ctx context.Context, filter dto.FilterPeopleDTO
 		}
 		peoples = append(peoples, people)
 	}
+
 	return peoples, nil
 }
 
-func (c PeopleCRUD) Update(ctx context.Context, people dto.UpdatePeopleDTO, uuid pgtype.UUID) (dto.ReadPeopleDTO, error) {
+func (c PeopleCRUD) Update(ctx context.Context, uuid pgtype.UUID, people dto.UpdatePeopleDTO) (dto.ReadPeopleDTO, error) {
 	q := `UPDATE public.peoples 
 		  SET (passport_serie, passport_number, surname, name, patronymic, address, updated_at) = ($2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP(0)) 
 		  WHERE uuid=$1 
