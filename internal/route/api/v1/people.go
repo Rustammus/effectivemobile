@@ -14,10 +14,14 @@ func (h *Handler) initPeopleRouter(r *gin.RouterGroup) {
 	p := r.Group("/people")
 	{
 		p.POST("", h.peopleCreate)
-		p.GET("/:uuid")
+		p.GET("/:uuid", h.peopleFindByUUID)
 		p.GET("/list", h.peopleListByFilter)
 		p.PUT("/:uuid", h.peopleUpdate)
 		p.DELETE("/:uuid", h.peopleDelete)
+
+		p.POST("/:uuid/start-task", h.peopleTaskStart)
+		p.POST("/:uuid/end-task/:task-uuid", h.peopleTaskEnd)
+		p.GET("/:uuid/tasks", h.peopleTaskList)
 	}
 }
 
@@ -242,4 +246,51 @@ func (h *Handler) peopleDelete(c *gin.Context) {
 			UUID:    uuid,
 		},
 	)
+}
+
+func (h *Handler) peopleTaskStart(c *gin.Context) {
+	uuidS := c.Param("uuid")
+	uuid := pgtype.UUID{}
+
+	err := uuid.Scan(uuidS)
+	if err != nil {
+		//TODO error response
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+	//TODO create task by people uuid
+}
+
+func (h *Handler) peopleTaskEnd(c *gin.Context) {
+	peopleUUIDstr := c.Param("uuid")
+	taskUUIDstr := c.Param("task-uuid")
+	peopleUUID := pgtype.UUID{}
+	taskUUID := pgtype.UUID{}
+	err := peopleUUID.Scan(peopleUUIDstr)
+	if err != nil {
+		//TODO error response
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	err = taskUUID.Scan(taskUUIDstr)
+	if err != nil {
+		//TODO error response
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+	//TODO end task by people uuid
+}
+
+func (h *Handler) peopleTaskList(c *gin.Context) {
+	uuidS := c.Param("uuid")
+	uuid := pgtype.UUID{}
+
+	err := uuid.Scan(uuidS)
+	if err != nil {
+		//TODO error response
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+	//TODO list all task by people uuid order by time
 }

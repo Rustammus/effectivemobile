@@ -23,6 +23,7 @@ type PeopleService struct {
 }
 
 func (r *PeopleService) Create(p peopleSchemas.RequestCreatePeople) (pgtype.UUID, error) {
+	//TODO change schema to dto?
 	pass := strings.Split(p.PassportNumber, " ")
 	if len(pass) < 2 {
 		return pgtype.UUID{}, errors.New("error in passportNumber - not enough substrings. Example: '1234 567890'")

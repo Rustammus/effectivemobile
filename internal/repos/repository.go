@@ -7,10 +7,12 @@ import (
 
 type Repositories struct {
 	People PeopleRepository
+	Task   TaskRepository
 }
 
 func NewRepositories(pool *pgxpool.Pool) *Repositories {
 	return &Repositories{
 		People: crud.NewPeopleCRUD(pool),
+		Task:   crud.NewTaskCRUD(pool),
 	}
 }
