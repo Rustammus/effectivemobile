@@ -7,5 +7,3 @@ CREATE TABLE tasks
     end_time timestamptz NULL ,
     FOREIGN KEY (people_uuid) REFERENCES peoples(uuid) ON DELETE CASCADE
 );
-
-DROP TABLE tasks

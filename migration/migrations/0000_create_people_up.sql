@@ -10,5 +10,3 @@ CREATE TABLE peoples
     updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
     created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP(0)
 );
-
-DROP TABLE peoples

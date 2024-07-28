@@ -1,296 +1,271 @@
 package v1
 
 import (
+	"EffectiveMobile/internal/config"
 	"EffectiveMobile/internal/crud"
 	"EffectiveMobile/internal/dto"
 	"EffectiveMobile/internal/schemas/peopleSchemas"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgtype"
-	"net/http"
-	"strconv"
 )
 
+var maxRowLimit = 40
+
 func (h *Handler) initPeopleRouter(r *gin.RouterGroup) {
+	maxRowLimit = config.GetConfig().Server.MaxRowLimit
 	p := r.Group("/people")
 	{
 		p.POST("", h.peopleCreate)
 		p.GET("/:uuid", h.peopleFindByUUID)
-		p.GET("/list", h.peopleListByFilter)
+		p.GET("", h.peopleListByFilter)
 		p.PUT("/:uuid", h.peopleUpdate)
 		p.DELETE("/:uuid", h.peopleDelete)
 
 		p.POST("/:uuid/start-task", h.peopleTaskStart)
-		p.POST("/:uuid/end-task/:task-uuid", h.peopleTaskEnd)
 		p.GET("/:uuid/tasks", h.peopleTaskList)
 	}
 }
 
+// peopleCreate godoc
+// @Tags         People API
+// @Summary      Create people
+// @Description  Create people
+// @Accept       json
+// @Produce      json
+// @Param People body  peopleSchemas.RequestCreatePeople true "People base"
+// @Success 200 {object} schemas.BaseResp
+// @Failure      404  {object}	schemas.BaseResp
+// @Failure      500  {object}	schemas.BaseResp
+// @Router       /people [post]
 func (h *Handler) peopleCreate(c *gin.Context) {
 	peopleRequest := peopleSchemas.RequestCreatePeople{}
 
 	err := c.ShouldBindJSON(&peopleRequest)
 	if err != nil {
-		//TODO error response
-		c.AbortWithStatus(http.StatusBadRequest)
+		writeResp404(c, err, "error on binding JSON")
 		return
 	}
 
 	uuid, err := h.Services.People.Create(peopleRequest)
 	if err != nil {
-		//TODO error response
-		c.AbortWithStatus(http.StatusInternalServerError)
+		writeResp500(c, err, "error on create people")
 		return
 	}
 
-	c.JSON(http.StatusOK, struct {
-		Message string      `json:"message"`
-		UUID    pgtype.UUID `json:"uuid"`
-	}{
-		Message: "people created",
-		UUID:    uuid,
-	})
-
+	writeResp200(c, uuid, "people created")
 }
 
+// peopleFindByUUID godoc
+// @Tags         People API
+// @Summary      Find People by uuid
+// @Description  Find People by uuid
+// @Accept       json
+// @Produce      json
+// @Param uuid path string true "People UUID" format(uuid)
+// @Success 200 {object} schemas.BaseResp
+// @Failure      404  {object}	schemas.BaseResp
+// @Failure      500  {object}	schemas.BaseResp
+// @Router       /people/{uuid} [get]
 func (h *Handler) peopleFindByUUID(c *gin.Context) {
-	uuidS := c.Param("uuid")
-	uuid := pgtype.UUID{}
-	err := uuid.Scan(uuidS)
+	uuid, err := scanUUIDParam(c)
 	if err != nil {
-		//TODO error response
-		c.AbortWithStatus(http.StatusBadRequest)
+		writeResp404(c, err, "error on scan param 'uuid'")
 		return
 	}
 
 	people, err := h.Services.People.FindByUUID(uuid)
 	if err != nil {
-		//TODO error response
-		c.AbortWithStatus(http.StatusInternalServerError)
+		writeResp404(c, err, "error on list people")
 		return
 	}
 
-	c.JSON(
-		http.StatusOK,
-		struct {
-			Message string            `json:"message"`
-			Peoples dto.ReadPeopleDTO `json:"people"`
-		}{
-			Message: "people found",
-			Peoples: people,
-		},
-	)
+	writeResp200(c, people, "peoples found")
 }
 
-func (h *Handler) peopleList(c *gin.Context) {
-	offsetN, limitN := 0, 10
-	var err error
-	offsetS, ok := c.GetQuery("offset")
-	limitS, ok2 := c.GetQuery("limit")
-	if ok && ok2 {
-		offsetN, err = strconv.Atoi(offsetS)
-		limitN, err = strconv.Atoi(limitS)
-		if err != nil {
-			//TODO error response
-			c.AbortWithStatus(http.StatusBadRequest)
-			return
-		}
-		if limitN > 40 {
-			limitN = 40
-		}
-	}
+//TODO swagger pizdes
 
-	peoples, newPag, err := h.Services.People.FindAllByOffset(crud.Pagination{
-		Offset:    offsetN,
-		Limit:     limitN,
-		Timestamp: pgtype.Timestamptz{},
-	})
-	if err != nil {
-		//TODO error response
-		c.AbortWithStatus(http.StatusInternalServerError)
-		return
-	}
-
-	c.JSON(
-		http.StatusOK,
-		struct {
-			Message        string              `json:"message"`
-			Peoples        []dto.ReadPeopleDTO `json:"peoples"`
-			NextPagination crud.Pagination     `json:"pagination"`
-		}{
-			Message:        "people read",
-			Peoples:        peoples,
-			NextPagination: newPag,
-		},
-	)
-}
-
+// peopleListByFilter godoc
+// @Tags         People API
+// @Summary      List Peoples by filter
+// @Description  List Peoples by filter
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}   schemas.BaseResp
+// @Failure      500  {object}	schemas.BaseResp
+// @Router       /people [get]
 func (h *Handler) peopleListByFilter(c *gin.Context) {
-	offsetN, limitN := 0, 10
+	//offsetN, limitN := 0, 10
 	var err error
-	offsetS, ok := c.GetQuery("offset")
-	limitS, ok2 := c.GetQuery("limit")
-	if ok && ok2 {
-		offsetN, err = strconv.Atoi(offsetS)
-		limitN, err = strconv.Atoi(limitS)
-		if err != nil {
-			//TODO error response
-			c.AbortWithStatus(http.StatusBadRequest)
-			return
-		}
-		if limitN > 40 {
-			//TODO configurable max limit
-			limitN = 40
-		}
-		if offsetN < 0 {
-			offsetN = 0
-		}
-	}
+	//TODO remove
+	//offsetS, ok := c.GetQuery("offset")
+	//limitS, ok2 := c.GetQuery("limit")
+	//if ok && ok2 {
+	//	offsetN, err = strconv.Atoi(offsetS)
+	//	limitN, err = strconv.Atoi(limitS)
+	//	if err != nil {
+	//		writeResp404(c, err, "error on scan query 'offset' or 'limit'")
+	//		return
+	//	}
+	//	if limitN > maxRowLimit {
+	//		limitN = maxRowLimit
+	//	}
+	//	if offsetN < 0 {
+	//		offsetN = 0
+	//	}
+	//}
 
 	filter := peopleSchemas.RequestFilterPeople{}
 	pagination := crud.Pagination{}
 	err = c.BindQuery(&filter)
 	if err != nil {
-		//TODO error response
-		c.AbortWithStatus(http.StatusBadRequest)
+		writeResp404(c, err, "error on bind filter queries")
 		return
 	}
 
 	err = c.BindQuery(&pagination)
 	if err != nil {
-		//TODO error response
-		c.AbortWithStatus(http.StatusBadRequest)
+		writeResp404(c, err, "error on bind filter queries")
 		return
 	}
 
 	peoples, nextPag, err := h.Services.People.FindByFilterOffset(filter, pagination)
 	if err != nil {
-		//TODO error response
-		c.AbortWithStatus(http.StatusInternalServerError)
+		writeResp500(c, err, "error on list people")
 		return
 	}
 
-	c.JSON(
-		http.StatusOK,
-		struct {
-			Message        string              `json:"message"`
-			Peoples        []dto.ReadPeopleDTO `json:"peoples"`
-			NextPagination crud.Pagination     `json:"next_pagination"`
-		}{
-			Message:        "people read with filter",
-			Peoples:        peoples,
-			NextPagination: nextPag,
-		},
-	)
+	resp := peopleSchemas.RespPeoplePaginated{
+		Peoples:        peoples,
+		NextPagination: nextPag,
+	}
+	writeResp200(c, resp, "peoples found")
 }
 
+// peopleUpdate godoc
+// @Tags         People API
+// @Summary      Update people
+// @Description  Update people
+// @Accept       json
+// @Produce      json
+// Param UpdatePeople body peopleSchemas.RequestUpdatePeople true "People base"
+// @Param uuid path string false "People UUID" format(uuid)
+// @Success 	 200 {object} schemas.BaseResp
+// @Failure      404  {object}	schemas.BaseResp
+// @Failure      500  {object}	schemas.BaseResp
+// @Router       /people/{uuid} [put]
 func (h *Handler) peopleUpdate(c *gin.Context) {
-	uuidS := c.Param("uuid")
-	uuid := pgtype.UUID{}
-	err := uuid.Scan(uuidS)
+	uuid, err := scanUUIDParam(c)
 	if err != nil {
-		//TODO error response
-		c.AbortWithStatus(http.StatusBadRequest)
+		writeResp404(c, err, "error on scan param 'uuid'")
 		return
 	}
 
 	uPeople := peopleSchemas.RequestUpdatePeople{}
-
 	err = c.ShouldBindJSON(&uPeople)
 	if err != nil {
-		//TODO error response
-		c.AbortWithStatus(http.StatusBadRequest)
+		writeResp404(c, err, "error on bind people update")
 		return
 	}
 
 	rPeople, err := h.Services.People.UpdateByUUID(uuid, uPeople)
 	if err != nil {
-		//TODO error response
-		c.AbortWithStatus(http.StatusInternalServerError)
+		writeResp500(c, err, "error on update people")
 		return
 	}
 
-	c.JSON(
-		http.StatusOK,
-		struct {
-			Message string            `json:"message"`
-			Peoples dto.ReadPeopleDTO `json:"peoples"`
-		}{
-			Message: "people updated",
-			Peoples: rPeople,
-		},
-	)
+	writeResp200(c, rPeople, "peoples updated")
 }
 
+// peopleDelete godoc
+// @Tags         People API
+// @Summary      Delete people
+// @Description  Delete people
+// @Accept       json
+// @Produce      json
+// @Param uuid path string false "People UUID" format(uuid)
+// @Success 200 {object} schemas.BaseResp
+// @Failure      404  {object}	schemas.BaseResp
+// @Failure      500  {object}	schemas.BaseResp
+// @Router       /people/{uuid} [delete]
 func (h *Handler) peopleDelete(c *gin.Context) {
-	uuidS := c.Param("uuid")
-	uuid := pgtype.UUID{}
-	err := uuid.Scan(uuidS)
+	uuid, err := scanUUIDParam(c)
 	if err != nil {
-		//TODO error response
-		c.AbortWithStatus(http.StatusBadRequest)
+		writeResp404(c, err, "error on scan param 'uuid'")
 		return
 	}
+
 	uuid, err = h.Services.People.DeleteByUUID(uuid)
 	if err != nil {
-		//TODO error response
-		c.AbortWithStatus(http.StatusInternalServerError)
+		writeResp500(c, err, "error on update people")
 		return
 	}
-	c.JSON(
-		http.StatusOK,
-		struct {
-			Message string      `json:"message"`
-			UUID    pgtype.UUID `json:"uuid"`
-		}{
-			Message: "people deleted",
-			UUID:    uuid,
-		},
-	)
+
+	writeResp200(c, uuid, "peoples deleted")
 }
 
+// peopleTaskStart godoc
+// @Tags         People API
+// @Summary      Create and start task by People uuid
+// @Description  Create and start task by People uuid
+// @Accept       json
+// @Produce      json
+// @Param uuid path string true "People UUID" format(uuid)
+// @Param name query string true "Task name"
+// @Success 200 {object} schemas.BaseResp
+// @Failure      404  {object}	schemas.BaseResp
+// @Failure      500  {object}	schemas.BaseResp
+// @Router       /people/{uuid}/start-task [post]
 func (h *Handler) peopleTaskStart(c *gin.Context) {
-	uuidS := c.Param("uuid")
-	uuid := pgtype.UUID{}
-
-	err := uuid.Scan(uuidS)
+	//TODO nil name
+	name, _ := c.GetQuery("name")
+	uuid, err := scanUUIDParam(c)
 	if err != nil {
-		//TODO error response
-		c.AbortWithStatus(http.StatusBadRequest)
+		writeResp404(c, err, "error on scan param 'uuid'")
 		return
 	}
-	//TODO create task by people uuid
+
+	taskUUID, err := h.Services.Task.StartNew(dto.CreateTaskDTO{
+		PeopleUUID: uuid,
+		Name:       name,
+	})
+	if err != nil {
+		writeResp500(c, err, "error on delete people")
+		return
+	}
+
+	writeResp200(c, taskUUID, "people tasks read")
 }
 
-func (h *Handler) peopleTaskEnd(c *gin.Context) {
-	peopleUUIDstr := c.Param("uuid")
-	taskUUIDstr := c.Param("task-uuid")
-	peopleUUID := pgtype.UUID{}
-	taskUUID := pgtype.UUID{}
-	err := peopleUUID.Scan(peopleUUIDstr)
-	if err != nil {
-		//TODO error response
-		c.AbortWithStatus(http.StatusBadRequest)
-		return
-	}
-
-	err = taskUUID.Scan(taskUUIDstr)
-	if err != nil {
-		//TODO error response
-		c.AbortWithStatus(http.StatusBadRequest)
-		return
-	}
-	//TODO end task by people uuid
-}
-
+// peopleTaskList godoc
+// @Tags         People API
+// @Summary      List all tasks by People uuid
+// @Description  List all tasks by People uuid
+// @Accept       json
+// @Produce      json
+// @Param uuid path string true "People UUID" format(uuid)
+// @Success 200 {object} schemas.BaseResp
+// @Failure      404  {object}	schemas.BaseResp
+// @Failure      500  {object}	schemas.BaseResp
+// @Router       /people/{uuid}/tasks [get]
 func (h *Handler) peopleTaskList(c *gin.Context) {
-	uuidS := c.Param("uuid")
-	uuid := pgtype.UUID{}
-
-	err := uuid.Scan(uuidS)
+	uuid, err := scanUUIDParam(c)
 	if err != nil {
-		//TODO error response
-		c.AbortWithStatus(http.StatusBadRequest)
+		writeResp404(c, err, "error on scan uuid")
 		return
 	}
-	//TODO list all task by people uuid order by time
+
+	tasks, err := h.Services.Task.ListByPeople(uuid)
+	if err != nil {
+		writeResp500(c, err, "error on delete people")
+		return
+	}
+
+	writeResp200(c, tasks, "people tasks read")
+}
+
+func scanUUIDParam(c *gin.Context) (pgtype.UUID, error) {
+	uuidS := c.Param("uuid")
+	uuid := pgtype.UUID{}
+	err := uuid.Scan(uuidS)
+	return uuid, err
 }

@@ -10,14 +10,16 @@ import (
 
 type Config struct {
 	Server struct {
-		Port        string `yaml:"port" env:"APP_PORT"`
-		ExternalURL string `yaml:"external_url" env:"APP_EXTERNAL_URL"`
+		Port         string `yaml:"port" env:"APP_PORT"`
+		ExternalURL  string `yaml:"external_url" env:"APP_EXTERNAL_URL"`
+		MigrationDir string `yaml:"migration_dir" env:"APP_MIGRATION_DIR"`
+		MaxRowLimit  int    `yaml:"max_row_limit" env:"APP_MAX_ROW_LIMIT"`
 	} `yaml:"server"`
 	Storage `yaml:"storage"`
 }
 
 type Storage struct {
-	Username string `yaml:"username" env:"POSTGRES_USERNAME"`
+	Username string `yaml:"username" env:"POSTGRES_USER"`
 	Password string `yaml:"password" env:"POSTGRES_PASSWORD"`
 	Host     string `yaml:"host" env:"POSTGRES_HOST"`
 	Port     string `yaml:"port" env:"POSTGRES_PORT"`

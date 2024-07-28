@@ -1,0 +1,329 @@
+basePath: /api/v1
+definitions:
+  peopleSchemas.RequestCreatePeople:
+    properties:
+      passportNumber:
+        type: string
+    type: object
+  schemas.BaseResp:
+    properties:
+      data: {}
+      error: {}
+      message:
+        type: string
+    type: object
+externalDocs:
+  description: OpenAPI
+  url: https://swagger.io/resources/open-api/
+host: localhost:8082
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: This is my server.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Swagger Example API
+  version: "1.0"
+paths:
+  /people:
+    get:
+      consumes:
+      - application/json
+      description: List Peoples by filter
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/schemas.BaseResp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/schemas.BaseResp'
+      summary: List Peoples by filter
+      tags:
+      - People API
+    post:
+      consumes:
+      - application/json
+      description: Create people
+      parameters:
+      - description: People base
+        in: body
+        name: People
+        required: true
+        schema:
+          $ref: '#/definitions/peopleSchemas.RequestCreatePeople'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/schemas.BaseResp'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/schemas.BaseResp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/schemas.BaseResp'
+      summary: Create people
+      tags:
+      - People API
+  /people/{uuid}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete people
+      parameters:
+      - description: People UUID
+        format: uuid
+        in: path
+        name: uuid
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/schemas.BaseResp'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/schemas.BaseResp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/schemas.BaseResp'
+      summary: Delete people
+      tags:
+      - People API
+    get:
+      consumes:
+      - application/json
+      description: Find People by uuid
+      parameters:
+      - description: People UUID
+        format: uuid
+        in: path
+        name: uuid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/schemas.BaseResp'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/schemas.BaseResp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/schemas.BaseResp'
+      summary: Find People by uuid
+      tags:
+      - People API
+    put:
+      consumes:
+      - application/json
+      description: Update people
+      parameters:
+      - description: People UUID
+        format: uuid
+        in: path
+        name: uuid
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/schemas.BaseResp'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/schemas.BaseResp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/schemas.BaseResp'
+      summary: Update people
+      tags:
+      - People API
+  /people/{uuid}/start-task:
+    post:
+      consumes:
+      - application/json
+      description: Create and start task by People uuid
+      parameters:
+      - description: People UUID
+        format: uuid
+        in: path
+        name: uuid
+        required: true
+        type: string
+      - description: Task name
+        in: query
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/schemas.BaseResp'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/schemas.BaseResp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/schemas.BaseResp'
+      summary: Create and start task by People uuid
+      tags:
+      - People API
+  /people/{uuid}/tasks:
+    get:
+      consumes:
+      - application/json
+      description: List all tasks by People uuid
+      parameters:
+      - description: People UUID
+        format: uuid
+        in: path
+        name: uuid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/schemas.BaseResp'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/schemas.BaseResp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/schemas.BaseResp'
+      summary: List all tasks by People uuid
+      tags:
+      - People API
+  /task:
+    get:
+      consumes:
+      - application/json
+      description: Stop task by uuid
+      parameters:
+      - description: People UUID
+        format: uuid
+        in: query
+        name: people
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/schemas.BaseResp'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/schemas.BaseResp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/schemas.BaseResp'
+      summary: Stop task by uuid
+      tags:
+      - Task API
+    post:
+      consumes:
+      - application/json
+      description: Create and start task by People uuid
+      parameters:
+      - description: Task name
+        in: query
+        name: name
+        type: string
+      - description: Task name
+        format: uuid
+        in: query
+        name: people
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/schemas.BaseResp'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/schemas.BaseResp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/schemas.BaseResp'
+      summary: Create and start task by People uuid
+      tags:
+      - Task API
+    put:
+      consumes:
+      - application/json
+      description: Stop task by uuid
+      parameters:
+      - description: Task UUID
+        format: uuid
+        in: path
+        name: uuid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/schemas.BaseResp'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/schemas.BaseResp'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/schemas.BaseResp'
+      summary: Stop task by uuid
+      tags:
+      - Task API
+securityDefinitions:
+  ApiKeyAuth:
+    description: Used for
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

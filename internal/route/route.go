@@ -16,11 +16,9 @@ func NewHandler(services *service.Services) *Handler {
 	return &Handler{Services: services}
 }
 
-func (h *Handler) Init() *gin.Engine {
-	r := gin.Default()
+func (h *Handler) Init(r *gin.Engine) {
 	handlerV1 := v1.NewHandler(h.Services)
 	apiV1 := r.Group("/api/v1")
 	handlerV1.Init(apiV1)
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	return r
 }

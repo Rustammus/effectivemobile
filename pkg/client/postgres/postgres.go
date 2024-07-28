@@ -25,10 +25,11 @@ func NewClient(ctx context.Context, cf config.Storage) (connect *pgx.Conn, err e
 	maxAttempts := 5
 
 	for maxAttempts > 0 {
-		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		ctxT, cancel := context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()
 
-		connect, err = pgx.Connect(ctx, dsn)
+		connect, err = pgx.Connect(ctxT, dsn)
+		cancel()
 		if err != nil {
 			logger.Error("Failed to connect to database. Try again...")
 			maxAttempts--

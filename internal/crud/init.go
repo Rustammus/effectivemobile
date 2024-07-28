@@ -8,7 +8,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-var ConnPool *pgxpool.Pool
+var connPool *pgxpool.Pool
 
 func init() {
 	logger := logging.GetLogger()
@@ -18,5 +18,9 @@ func init() {
 	if err != nil {
 		logger.Fatalf("Can't crate connection Pool. Abort start app. \n Error: %s", err.Error())
 	}
-	ConnPool = pool
+	connPool = pool
+}
+
+func GetPool() *pgxpool.Pool {
+	return connPool
 }

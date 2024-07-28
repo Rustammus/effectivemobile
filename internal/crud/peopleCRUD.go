@@ -57,7 +57,7 @@ func (c PeopleCRUD) FindAll(ctx context.Context) ([]dto.ReadPeopleDTO, error) {
 
 func (c PeopleCRUD) FindAllByOffset(ctx context.Context, pag Pagination) ([]dto.ReadPeopleDTO, error) {
 	q := `SELECT uuid, passport_serie, passport_number, surname, name, patronymic, address, updated_at, created_at 
-		  FROM public.people 
+		  FROM public.peoples 
 		  OFFSET $1 LIMIT $2`
 
 	peoples := make([]dto.ReadPeopleDTO, 0)
