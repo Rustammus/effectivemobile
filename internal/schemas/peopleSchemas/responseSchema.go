@@ -14,11 +14,21 @@ type RespPeople struct {
 	Name           string             `json:"name" example:"Иван"`
 	Patronymic     string             `json:"patronymic" example:"Иванович"`
 	Address        string             `json:"address" example:"г. Москва, ул. Ленина, д. 5, кв. 1"`
-	UpdatedAt      pgtype.Timestamptz `json:"updated_at" example:"2020-01-01T00:00:00Z"`
-	CreatedAt      pgtype.Timestamptz `json:"created_at" example:"2020-01-01T00:00:00Z"`
+	UpdatedAt      pgtype.Timestamptz `json:"updated_at" example:"2020-01-01T00:00:00Z" swaggertype:"string"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at" example:"2020-01-01T00:00:00Z" swaggertype:"string"`
 }
 
 type RespPeoplePaginated struct {
 	Peoples        []dto.ReadPeopleDTO `json:"peoples"`
 	NextPagination crud.Pagination     `json:"next_pagination"`
+}
+
+type BaseResp struct {
+	Message string `json:"message"`
+	Error   string `json:"error,omitempty"`
+}
+
+type RespPeopleCreate struct {
+	BaseResp
+	Data RespPeople `json:"data"`
 }

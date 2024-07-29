@@ -23,8 +23,8 @@ type ReadPeopleDTO struct {
 	Patronymic     string      `json:"patronymic" example:"Иванович"`
 	Address        string      `json:"address" example:"г. Москва, ул. Ленина, д. 5, кв. 1"`
 	//IsDeleted      bool               `json:"is_deleted" example:"false"`
-	UpdatedAt pgtype.Timestamptz `json:"updatedAt" example:"2020-01-01T00:00:00Z"`
-	CreatedAt pgtype.Timestamptz `json:"createdAt" example:"2020-01-01T00:00:00Z"`
+	UpdatedAt pgtype.Timestamptz `json:"updatedAt" example:"2020-01-01T00:00:00Z" swaggertype:"string"`
+	CreatedAt pgtype.Timestamptz `json:"createdAt" example:"2020-01-01T00:00:00Z" swaggertype:"string"`
 }
 
 type UpdatePeopleDTO struct {

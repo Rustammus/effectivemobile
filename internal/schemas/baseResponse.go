@@ -1,5 +1,9 @@
 package schemas
 
+import (
+	"github.com/jackc/pgx/v5/pgtype"
+)
+
 type BaseResp struct {
 	Message string `json:"message"`
 	Error   error  `json:"error"`
@@ -7,5 +11,5 @@ type BaseResp struct {
 }
 
 type ResponseUUID struct {
-	UUID string `json:"uuid"`
+	UUID pgtype.UUID `json:"uuid" example:"550e8400-e29b-41d4-a716-446655440000"`
 }

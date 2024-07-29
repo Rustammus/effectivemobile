@@ -14,9 +14,8 @@ type PeopleCRUD struct {
 }
 
 type Pagination struct {
-	Offset    int
-	Limit     int
-	Timestamp pgtype.Timestamptz
+	Offset int `json:"offset"`
+	Limit  int `json:"limit"`
 }
 
 func (c PeopleCRUD) Create(ctx context.Context, dto dto.CreatePeopleDTO) (pgtype.UUID, error) {
@@ -89,7 +88,7 @@ func (c PeopleCRUD) FindByUUID(ctx context.Context, uuid pgtype.UUID) (dto.ReadP
 	if err != nil {
 		return dto.ReadPeopleDTO{}, err
 	}
-	return dto.ReadPeopleDTO{}, nil
+	return people, nil
 }
 
 func (c PeopleCRUD) FindByFilterOffset(ctx context.Context, filter dto.FilterPeopleDTO, pag Pagination) ([]dto.ReadPeopleDTO, error) {

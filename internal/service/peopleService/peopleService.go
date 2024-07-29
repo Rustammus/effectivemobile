@@ -71,7 +71,7 @@ func (r *PeopleService) requestPeopleInfo(passportSerie, passportNumber int) (ex
 	}
 	defer response.Body.Close()
 
-	data := make([]byte, response.ContentLength)
+	data := make([]byte, response.ContentLength-1)
 	_, err = response.Body.Read(data)
 	if err != nil {
 		return people, err

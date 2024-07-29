@@ -16,7 +16,7 @@ type RequestUpdatePeople struct {
 }
 
 type RequestFilterPeople struct {
-	UUID           pgtype.UUID `json:"uuid" example:"550e8400-e29b-41d4-a716-446655440000"`
+	UUID           pgtype.UUID `json:"uuid" example:"550e8400-e29b-41d4-a716-446655440000" format:"uuid"`
 	PassportSerie  int         `json:"passportSerie" example:"1234"`
 	PassportNumber int         `json:"passportNumber" example:"567890"`
 	Surname        string      `json:"surname" example:"Иванов"`
