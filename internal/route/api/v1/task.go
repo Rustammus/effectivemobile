@@ -25,7 +25,7 @@ func (h *Handler) initTaskRouter(r *gin.RouterGroup) {
 // @Param name query string false "Task name"
 // @Param people query string true "People" format(uuid)
 // @Success 200 {object} IResponseBase[schemas.ResponseUUID]
-// @Failure      404  {object}	IResponseBaseErr
+// @Failure      400  {object}	IResponseBaseErr
 // @Failure      500  {object}	IResponseBaseErr
 // @Router       /task [post]
 func (h *Handler) taskStart(c *gin.Context) {
@@ -62,7 +62,7 @@ func (h *Handler) taskStart(c *gin.Context) {
 // @Produce      json
 // @Param uuid path string true "Task UUID" format(uuid)
 // @Success 200 {object} IResponseBase[dto.ReadTask]
-// @Failure      404  {object}	IResponseBaseErr
+// @Failure      400  {object}	IResponseBaseErr
 // @Failure      500  {object}	IResponseBaseErr
 // @Router       /task/{uuid} [put]
 func (h *Handler) taskStop(c *gin.Context) {
@@ -90,7 +90,7 @@ func (h *Handler) taskStop(c *gin.Context) {
 // @Produce      json
 // @Param people query string true "People UUID" format(uuid)
 // @Success 200 {object} IResponseBaseMulti[dto.ReadTask]
-// @Failure      404  {object}	IResponseBaseErr
+// @Failure      400  {object}	IResponseBaseErr
 // @Failure      500  {object}	IResponseBaseErr
 // @Router       /task [get]
 func (h *Handler) taskListByPeople(c *gin.Context) {

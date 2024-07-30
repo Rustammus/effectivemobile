@@ -99,8 +99,8 @@ const docTemplate = `{
                             "$ref": "#/definitions/v1.IResponseBasePaginated-dto_ReadPeople"
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/v1.IResponseBaseErr"
                         }
@@ -143,8 +143,8 @@ const docTemplate = `{
                             "$ref": "#/definitions/v1.IResponseBase-schemas_ResponseUUID"
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/v1.IResponseBaseErr"
                         }
@@ -188,8 +188,8 @@ const docTemplate = `{
                             "$ref": "#/definitions/v1.IResponseBase-schemas_ResponsePeople"
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/v1.IResponseBaseErr"
                         }
@@ -239,8 +239,8 @@ const docTemplate = `{
                             "$ref": "#/definitions/v1.IResponseBase-schemas_ResponsePeople"
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/v1.IResponseBaseErr"
                         }
@@ -281,8 +281,8 @@ const docTemplate = `{
                             "$ref": "#/definitions/v1.IResponseBase-schemas_ResponseUUID"
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/v1.IResponseBaseErr"
                         }
@@ -332,8 +332,8 @@ const docTemplate = `{
                             "$ref": "#/definitions/v1.IResponseBase-schemas_ResponseUUID"
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/v1.IResponseBaseErr"
                         }
@@ -377,8 +377,8 @@ const docTemplate = `{
                             "$ref": "#/definitions/v1.IResponseBaseMulti-dto_ReadTask"
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/v1.IResponseBaseErr"
                         }
@@ -422,8 +422,8 @@ const docTemplate = `{
                             "$ref": "#/definitions/v1.IResponseBaseMulti-dto_ReadTask"
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/v1.IResponseBaseErr"
                         }
@@ -471,8 +471,8 @@ const docTemplate = `{
                             "$ref": "#/definitions/v1.IResponseBase-schemas_ResponseUUID"
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/v1.IResponseBaseErr"
                         }
@@ -516,8 +516,8 @@ const docTemplate = `{
                             "$ref": "#/definitions/v1.IResponseBase-dto_ReadTask"
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/v1.IResponseBaseErr"
                         }

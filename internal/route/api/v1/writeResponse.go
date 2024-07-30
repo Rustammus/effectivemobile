@@ -12,7 +12,7 @@ type IResponseBase[T any] struct {
 
 type IResponseBaseErr struct {
 	Message string `json:"message"`
-	Error   error  `json:"error,omitempty"`
+	Error   string `json:"error,omitempty"`
 }
 
 type IResponseBasePaginated[T any] struct {
@@ -37,7 +37,7 @@ func IWriteResponse[DataType any](c *gin.Context, code int, data DataType, messa
 func IWriteResponseErr(c *gin.Context, code int, err error, message string) {
 	resp := IResponseBaseErr{
 		Message: message,
-		Error:   err,
+		Error:   err.Error(),
 	}
 	c.JSON(code, resp)
 }

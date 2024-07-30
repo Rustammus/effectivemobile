@@ -5,7 +5,6 @@ import (
 	"EffectiveMobile/internal/crud"
 	"EffectiveMobile/internal/dto"
 	"EffectiveMobile/internal/schemas"
-	"EffectiveMobile/pkg/logging"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -35,7 +34,7 @@ func (h *Handler) initPeopleRouter(r *gin.RouterGroup) {
 // @Produce      json
 // @Param People body  schemas.RequestCreatePeople true "People base"
 // @Success 200 {object} IResponseBase[schemas.ResponseUUID]
-// @Failure      404  {object}	IResponseBaseErr
+// @Failure      400  {object}	IResponseBaseErr
 // @Failure      500  {object}	IResponseBaseErr
 // @Router       /people [post]
 func (h *Handler) peopleCreate(c *gin.Context) {
@@ -64,7 +63,7 @@ func (h *Handler) peopleCreate(c *gin.Context) {
 // @Produce      json
 // @Param uuid path string true "People UUID" format(uuid)
 // @Success 200 {object} IResponseBase[schemas.ResponsePeople]
-// @Failure      404  {object}	IResponseBaseErr
+// @Failure      400  {object}	IResponseBaseErr
 // @Failure      500  {object}	IResponseBaseErr
 // @Router       /people/{uuid} [get]
 func (h *Handler) peopleFindByUUID(c *gin.Context) {
@@ -103,32 +102,11 @@ func (h *Handler) peopleFindByUUID(c *gin.Context) {
 // @Param PeopleFilter query schemas.RequestFilterPeople true "People base"
 // @Param Pagination query crud.Pagination true "Pagination base"
 // @Success      200  {object}  IResponseBasePaginated[dto.ReadPeople]
-// @Failure      404  {object}	IResponseBaseErr
+// @Failure      400  {object}	IResponseBaseErr
 // @Failure      500  {object}	IResponseBaseErr
 // @Router       /people [get]
 func (h *Handler) peopleListByFilter(c *gin.Context) {
-	//offsetN, limitN := 0, 10
 	var err error
-	//TODO remove
-	offsetS, ok := c.GetQuery("offset")
-	limitS, ok2 := c.GetQuery("limit")
-	maf := c.Request.URL.Query()
-	logging.GetLogger().Warnf("!!!DEBUG: offset=%s %v, limit=%s %v; Queryes len=%d", offsetS, ok, limitS, ok2, len(maf))
-
-	//if ok && ok2 {
-	//	offsetN, err = strconv.Atoi(offsetS)
-	//	limitN, err = strconv.Atoi(limitS)
-	//	if err != nil {
-	//		writeResp404(c, err, "error on scan query 'offset' or 'limit'")
-	//		return
-	//	}
-	//	if limitN > maxRowLimit {
-	//		limitN = maxRowLimit
-	//	}
-	//	if offsetN < 0 {
-	//		offsetN = 0
-	//	}
-	//}
 
 	filter := schemas.RequestFilterPeople{}
 	pagination := crud.Pagination{}
@@ -142,6 +120,22 @@ func (h *Handler) peopleListByFilter(c *gin.Context) {
 	if err != nil {
 		IWriteResponseErr(c, 400, err, "error on bind pagination queries")
 		return
+	}
+
+	uuidS, ok := c.GetQuery("uuid")
+	if ok {
+		err = filter.UUID.Scan(uuidS)
+		if err != nil {
+			IWriteResponseErr(c, 400, err, "error on scan uuid query")
+			return
+		}
+	}
+
+	if pagination.Limit > maxRowLimit || pagination.Limit < 1 {
+		pagination.Limit = maxRowLimit
+	}
+	if pagination.Offset < 0 {
+		pagination.Offset = 0
 	}
 
 	peoples, nextPag, err := h.Services.People.FindByFilterOffset(filter, pagination)
@@ -162,7 +156,7 @@ func (h *Handler) peopleListByFilter(c *gin.Context) {
 // @Param UpdatePeople body schemas.RequestUpdatePeople true "People base"
 // @Param uuid path string false "People UUID" format(uuid)
 // @Success 	 200 {object} IResponseBase[schemas.ResponsePeople]
-// @Failure      404  {object}	IResponseBaseErr
+// @Failure      400  {object}	IResponseBaseErr
 // @Failure      500  {object}	IResponseBaseErr
 // @Router       /people/{uuid} [put]
 func (h *Handler) peopleUpdate(c *gin.Context) {
@@ -208,7 +202,7 @@ func (h *Handler) peopleUpdate(c *gin.Context) {
 // @Produce      json
 // @Param uuid path string false "People UUID" format(uuid)
 // @Success 200 {object} IResponseBase[schemas.ResponseUUID]
-// @Failure      404  {object}	IResponseBaseErr
+// @Failure      400  {object}	IResponseBaseErr
 // @Failure      500  {object}	IResponseBaseErr
 // @Router       /people/{uuid} [delete]
 func (h *Handler) peopleDelete(c *gin.Context) {
@@ -235,7 +229,7 @@ func (h *Handler) peopleDelete(c *gin.Context) {
 // @Param uuid path string true "People UUID" format(uuid)
 // @Param name query string false "Task name"
 // @Success 200 {object} IResponseBase[schemas.ResponseUUID]
-// @Failure      404  {object}	IResponseBaseErr
+// @Failure      400  {object}	IResponseBaseErr
 // @Failure      500  {object}	IResponseBaseErr
 // @Router       /people/{uuid}/start-task [post]
 func (h *Handler) peopleTaskStart(c *gin.Context) {
@@ -266,7 +260,7 @@ func (h *Handler) peopleTaskStart(c *gin.Context) {
 // @Produce      json
 // @Param uuid path string true "People UUID" format(uuid)
 // @Success 200 {object} IResponseBaseMulti[dto.ReadTask]
-// @Failure      404  {object}	IResponseBaseErr
+// @Failure      400  {object}	IResponseBaseErr
 // @Failure      500  {object}	IResponseBaseErr
 // @Router       /people/{uuid}/tasks [get]
 func (h *Handler) peopleTaskList(c *gin.Context) {

@@ -23,7 +23,8 @@ func Run() {
 	repositories := repos.NewRepositories(logger, crud.GetPool())
 	allService := service.NewServices(service.Deps{Repos: repositories, Logger: logger})
 
-	server := gin.Default()
+	server := gin.New()
+	server.Use(gin.Logger(), gin.Recovery())
 	r := route.NewHandler(allService)
 	r.Init(server)
 

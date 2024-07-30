@@ -4,6 +4,7 @@ import (
 	"EffectiveMobile/internal/config"
 	"EffectiveMobile/pkg/logging"
 	"context"
+	"errors"
 	"fmt"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -31,14 +32,14 @@ func NewClient(ctx context.Context, cf config.Storage) (connect *pgx.Conn, err e
 		connect, err = pgx.Connect(ctxT, dsn)
 		cancel()
 		if err != nil {
-			logger.Error("Failed to connect to database. Try again...")
+			logger.Error(err.Error())
 			maxAttempts--
 			time.Sleep(time.Second)
 			continue
 		}
 		return connect, err
 	}
-	return nil, err
+	return nil, errors.New("limit connection try exceeded")
 }
 
 func NewPool(ctx context.Context, cf config.Storage) (pool *pgxpool.Pool, err error) {
@@ -50,8 +51,7 @@ func NewPool(ctx context.Context, cf config.Storage) (pool *pgxpool.Pool, err er
 	defer cancel()
 	pool, err = pgxpool.New(ctxPool, dsn)
 	if err != nil {
-		logger.Error(err.Error())
-		logger.Fatalln("Failed to create connection pool. Abort start app.")
+		return nil, err
 	}
 
 	ctxPing, cancel := context.WithTimeout(ctx, 10*time.Second)
@@ -65,7 +65,6 @@ func NewPool(ctx context.Context, cf config.Storage) (pool *pgxpool.Pool, err er
 		logger.Infof("Connected to database %s", cf.Database)
 		return pool, nil
 	}
-	logger.Fatalln("Failed to connect to database. Abort start app.")
 
-	return nil, nil
+	return nil, errors.New("limit connection try exceeded")
 }

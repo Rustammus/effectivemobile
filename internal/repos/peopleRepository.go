@@ -9,7 +9,6 @@ import (
 
 type PeopleRepository interface {
 	Create(ctx context.Context, dto dto.CreatePeople) (pgtype.UUID, error)
-	FindAll(ctx context.Context) ([]dto.ReadPeople, error)
 	FindAllByOffset(ctx context.Context, pag crud.Pagination) ([]dto.ReadPeople, error)
 	FindByFilterOffset(ctx context.Context, filter dto.FilterPeople, pag crud.Pagination) ([]dto.ReadPeople, error)
 	FindByUUID(ctx context.Context, uuid pgtype.UUID) (dto.ReadPeople, error)

@@ -14,7 +14,7 @@ type TaskCRUD struct {
 	logger logging.Logger
 }
 
-func (c TaskCRUD) Create(ctx context.Context, dto dto.CreateTask) (pgtype.UUID, error) {
+func (c *TaskCRUD) Create(ctx context.Context, dto dto.CreateTask) (pgtype.UUID, error) {
 	q := `INSERT INTO public.tasks (people_uuid, name, start_time) 
 		  VALUES ($1, $2, CURRENT_TIMESTAMP(0)) 
 		  RETURNING uuid`
@@ -32,7 +32,7 @@ func (c TaskCRUD) Create(ctx context.Context, dto dto.CreateTask) (pgtype.UUID, 
 	return uuid, nil
 }
 
-func (c TaskCRUD) ListByPeopleUUID(ctx context.Context, uuid pgtype.UUID) ([]dto.ReadTask, error) {
+func (c *TaskCRUD) ListByPeopleUUID(ctx context.Context, uuid pgtype.UUID) ([]dto.ReadTask, error) {
 	q := `SELECT uuid, people_uuid, name, start_time, end_time 
 		  FROM public.tasks 
 		  WHERE people_uuid = $1 
@@ -55,7 +55,7 @@ func (c TaskCRUD) ListByPeopleUUID(ctx context.Context, uuid pgtype.UUID) ([]dto
 	return tasks, nil
 }
 
-func (c TaskCRUD) UpdateTaskStop(ctx context.Context, uuid pgtype.UUID) (dto.ReadTask, error) {
+func (c *TaskCRUD) UpdateTaskStop(ctx context.Context, uuid pgtype.UUID) (dto.ReadTask, error) {
 	q := `UPDATE public.tasks SET end_time = CURRENT_TIMESTAMP(0) WHERE end_time IS NULL AND uuid = $1 RETURNING uuid, people_uuid, name, start_time, end_time`
 	task := dto.ReadTask{}
 	err := c.client.QueryRow(ctx, q, uuid).Scan(&task.UUID, &task.PeopleUUID, &task.Name, &task.StartTime, &task.EndTime)
