@@ -5,8 +5,9 @@ import (
 	"EffectiveMobile/internal/crud"
 	"EffectiveMobile/internal/dto"
 	"EffectiveMobile/internal/repos"
+	"EffectiveMobile/internal/schemas"
 	"EffectiveMobile/internal/schemas/externalApi"
-	"EffectiveMobile/internal/schemas/peopleSchemas"
+	"EffectiveMobile/pkg/logging"
 	"context"
 	"encoding/json"
 	"errors"
@@ -19,10 +20,11 @@ import (
 )
 
 type PeopleService struct {
-	Repo repos.PeopleRepository
+	Repo   repos.PeopleRepository
+	Logger logging.Logger
 }
 
-func (r *PeopleService) Create(p peopleSchemas.RequestCreatePeople) (pgtype.UUID, error) {
+func (r *PeopleService) Create(p schemas.RequestCreatePeople) (pgtype.UUID, error) {
 	//TODO change schema to dto?
 	pass := strings.Split(p.PassportNumber, " ")
 	if len(pass) < 2 {
@@ -36,10 +38,11 @@ func (r *PeopleService) Create(p peopleSchemas.RequestCreatePeople) (pgtype.UUID
 
 	people, err := r.requestPeopleInfo(passportSerie, passportNumber)
 	if err != nil {
+		r.Logger.Warnf("dddddddddddddddddddddddddddddddddd")
 		return pgtype.UUID{}, err
 	}
 
-	peopleCreate := dto.CreatePeopleDTO{
+	peopleCreate := dto.CreatePeople{
 		PassportSerie:  passportSerie,
 		PassportNumber: passportNumber,
 		Surname:        people.Surname,
@@ -50,8 +53,10 @@ func (r *PeopleService) Create(p peopleSchemas.RequestCreatePeople) (pgtype.UUID
 
 	uuid, err := r.Repo.Create(context.TODO(), peopleCreate)
 	if err != nil {
+		r.Logger.Error("error on create people. Values: %+v", peopleCreate)
 		return pgtype.UUID{}, err
 	}
+	r.Logger.Debugf("created people: %x\n\t Values: %+v", uuid.Bytes, peopleCreate)
 
 	return uuid, nil
 }
@@ -67,6 +72,7 @@ func (r *PeopleService) requestPeopleInfo(passportSerie, passportNumber int) (ex
 	client.Timeout = time.Second * 5
 	response, err := client.Get(url)
 	if err != nil {
+		r.Logger.Errorf("error on requesting people info. passport: %d %d. %s", passportSerie, passportNumber, err.Error())
 		return people, err
 	}
 	defer response.Body.Close()
@@ -85,15 +91,15 @@ func (r *PeopleService) requestPeopleInfo(passportSerie, passportNumber int) (ex
 	return people, nil
 }
 
-func (r *PeopleService) FindByUUID(uuid pgtype.UUID) (dto.ReadPeopleDTO, error) {
+func (r *PeopleService) FindByUUID(uuid pgtype.UUID) (dto.ReadPeople, error) {
 	people, err := r.Repo.FindByUUID(context.TODO(), uuid)
 	if err != nil {
-		return dto.ReadPeopleDTO{}, err
+		return dto.ReadPeople{}, err
 	}
 	return people, nil
 }
 
-func (r *PeopleService) FindAll() ([]dto.ReadPeopleDTO, error) {
+func (r *PeopleService) FindAll() ([]dto.ReadPeople, error) {
 	peoples, err := r.Repo.FindAll(context.TODO())
 	if err != nil {
 		return nil, err
@@ -101,10 +107,10 @@ func (r *PeopleService) FindAll() ([]dto.ReadPeopleDTO, error) {
 	return peoples, nil
 }
 
-func (r *PeopleService) FindAllByOffset(pag crud.Pagination) ([]dto.ReadPeopleDTO, crud.Pagination, error) {
+func (r *PeopleService) FindAllByOffset(pag crud.Pagination) ([]dto.ReadPeople, crud.Pagination, error) {
 	peoples, err := r.Repo.FindAllByOffset(context.TODO(), pag)
 	if err != nil {
-		return []dto.ReadPeopleDTO{}, crud.Pagination{}, err
+		return []dto.ReadPeople{}, crud.Pagination{}, err
 	}
 
 	pag.Offset += pag.Limit
@@ -112,17 +118,17 @@ func (r *PeopleService) FindAllByOffset(pag crud.Pagination) ([]dto.ReadPeopleDT
 	return peoples, pag, nil
 }
 
-func (r *PeopleService) FindByFilterOffset(f peopleSchemas.RequestFilterPeople, pag crud.Pagination) ([]dto.ReadPeopleDTO, crud.Pagination, error) {
+func (r *PeopleService) FindByFilterOffset(f schemas.RequestFilterPeople, pag crud.Pagination) ([]dto.ReadPeople, crud.Pagination, error) {
 	if f.UUID.Valid {
 		people, err := r.Repo.FindByUUID(context.TODO(), f.UUID)
-		ppls := make([]dto.ReadPeopleDTO, 0)
+		ppls := make([]dto.ReadPeople, 0)
 		ppls = append(ppls, people)
 		pag.Offset = 0
 		pag.Limit = 1
 		return ppls, pag, err
 	}
 
-	filter := dto.FilterPeopleDTO{
+	filter := dto.FilterPeople{
 		UUID:           f.UUID,
 		PassportSerie:  f.PassportSerie,
 		PassportNumber: f.PassportNumber,
@@ -142,8 +148,8 @@ func (r *PeopleService) FindByFilterOffset(f peopleSchemas.RequestFilterPeople, 
 	return peoples, pag, nil
 }
 
-func (r *PeopleService) UpdateByUUID(uuid pgtype.UUID, p peopleSchemas.RequestUpdatePeople) (dto.ReadPeopleDTO, error) {
-	updateDTO := dto.UpdatePeopleDTO{
+func (r *PeopleService) UpdateByUUID(uuid pgtype.UUID, p schemas.RequestUpdatePeople) (dto.ReadPeople, error) {
+	updateDTO := dto.UpdatePeople{
 		PassportSerie:  p.PassportSerie,
 		PassportNumber: p.PassportNumber,
 		Surname:        p.Surname,
@@ -154,7 +160,7 @@ func (r *PeopleService) UpdateByUUID(uuid pgtype.UUID, p peopleSchemas.RequestUp
 
 	rPeople, err := r.Repo.Update(context.TODO(), uuid, updateDTO)
 	if err != nil {
-		return dto.ReadPeopleDTO{}, err
+		return dto.ReadPeople{}, err
 	}
 	return rPeople, nil
 }

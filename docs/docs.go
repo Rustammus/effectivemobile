@@ -96,7 +96,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/v1.IResponseBaseMulti-dto_ReadPeopleDTO"
+                            "$ref": "#/definitions/v1.IResponseBasePaginated-dto_ReadPeople"
                         }
                     },
                     "404": {
@@ -132,7 +132,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/peopleSchemas.RequestCreatePeople"
+                            "$ref": "#/definitions/schemas.RequestCreatePeople"
                         }
                     }
                 ],
@@ -185,7 +185,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/v1.IResponseBase-peopleSchemas_RespPeople"
+                            "$ref": "#/definitions/v1.IResponseBase-schemas_ResponsePeople"
                         }
                     },
                     "404": {
@@ -221,7 +221,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/peopleSchemas.RequestUpdatePeople"
+                            "$ref": "#/definitions/schemas.RequestUpdatePeople"
                         }
                     },
                     {
@@ -236,7 +236,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/v1.IResponseBase-peopleSchemas_RespPeople"
+                            "$ref": "#/definitions/v1.IResponseBase-schemas_ResponsePeople"
                         }
                     },
                     "404": {
@@ -322,27 +322,26 @@ const docTemplate = `{
                         "type": "string",
                         "description": "Task name",
                         "name": "name",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/schemas.BaseResp"
+                            "$ref": "#/definitions/v1.IResponseBase-schemas_ResponseUUID"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/schemas.BaseResp"
+                            "$ref": "#/definitions/v1.IResponseBaseErr"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/schemas.BaseResp"
+                            "$ref": "#/definitions/v1.IResponseBaseErr"
                         }
                     }
                 }
@@ -375,19 +374,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/v1.IResponseBase-schemas_ResponseUUID"
+                            "$ref": "#/definitions/v1.IResponseBaseMulti-dto_ReadTask"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/schemas.BaseResp"
+                            "$ref": "#/definitions/v1.IResponseBaseErr"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/schemas.BaseResp"
+                            "$ref": "#/definitions/v1.IResponseBaseErr"
                         }
                     }
                 }
@@ -395,7 +394,7 @@ const docTemplate = `{
         },
         "/task": {
             "get": {
-                "description": "Stop task by uuid",
+                "description": "List tasks by people",
                 "consumes": [
                     "application/json"
                 ],
@@ -405,7 +404,7 @@ const docTemplate = `{
                 "tags": [
                     "Task API"
                 ],
-                "summary": "Stop task by uuid",
+                "summary": "List tasks by people",
                 "parameters": [
                     {
                         "type": "string",
@@ -420,62 +419,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/schemas.BaseResp"
+                            "$ref": "#/definitions/v1.IResponseBaseMulti-dto_ReadTask"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/schemas.BaseResp"
+                            "$ref": "#/definitions/v1.IResponseBaseErr"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/schemas.BaseResp"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "Stop task by uuid",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Task API"
-                ],
-                "summary": "Stop task by uuid",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "Task UUID",
-                        "name": "uuid",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/schemas.BaseResp"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/schemas.BaseResp"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/schemas.BaseResp"
+                            "$ref": "#/definitions/v1.IResponseBaseErr"
                         }
                     }
                 }
@@ -502,7 +458,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "format": "uuid",
-                        "description": "Task name",
+                        "description": "People",
                         "name": "people",
                         "in": "query",
                         "required": true
@@ -512,19 +468,64 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/schemas.BaseResp"
+                            "$ref": "#/definitions/v1.IResponseBase-schemas_ResponseUUID"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/schemas.BaseResp"
+                            "$ref": "#/definitions/v1.IResponseBaseErr"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/schemas.BaseResp"
+                            "$ref": "#/definitions/v1.IResponseBaseErr"
+                        }
+                    }
+                }
+            }
+        },
+        "/task/{uuid}": {
+            "put": {
+                "description": "Stop task by uuid",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Task API"
+                ],
+                "summary": "Stop task by uuid",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Task UUID",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1.IResponseBase-dto_ReadTask"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/v1.IResponseBaseErr"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.IResponseBaseErr"
                         }
                     }
                 }
@@ -543,7 +544,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.ReadPeopleDTO": {
+        "dto.ReadPeople": {
             "type": "object",
             "properties": {
                 "address": {
@@ -585,7 +586,34 @@ const docTemplate = `{
                 }
             }
         },
-        "peopleSchemas.RequestCreatePeople": {
+        "dto.ReadTask": {
+            "type": "object",
+            "properties": {
+                "end_time": {
+                    "type": "string",
+                    "format": "timestamp",
+                    "example": "2020-01-01T00:00:00Z"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "do nothing"
+                },
+                "people_uuid": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "start_time": {
+                    "type": "string",
+                    "format": "timestamp",
+                    "example": "2020-01-01T00:00:00Z"
+                },
+                "uuid": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                }
+            }
+        },
+        "schemas.RequestCreatePeople": {
             "type": "object",
             "properties": {
                 "passportNumber": {
@@ -593,7 +621,7 @@ const docTemplate = `{
                 }
             }
         },
-        "peopleSchemas.RequestUpdatePeople": {
+        "schemas.RequestUpdatePeople": {
             "type": "object",
             "properties": {
                 "address": {
@@ -622,7 +650,7 @@ const docTemplate = `{
                 }
             }
         },
-        "peopleSchemas.RespPeople": {
+        "schemas.ResponsePeople": {
             "type": "object",
             "properties": {
                 "address": {
@@ -663,16 +691,6 @@ const docTemplate = `{
                 }
             }
         },
-        "schemas.BaseResp": {
-            "type": "object",
-            "properties": {
-                "data": {},
-                "error": {},
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
         "schemas.ResponseUUID": {
             "type": "object",
             "properties": {
@@ -682,11 +700,22 @@ const docTemplate = `{
                 }
             }
         },
-        "v1.IResponseBase-peopleSchemas_RespPeople": {
+        "v1.IResponseBase-dto_ReadTask": {
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/peopleSchemas.RespPeople"
+                    "$ref": "#/definitions/dto.ReadTask"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1.IResponseBase-schemas_ResponsePeople": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/schemas.ResponsePeople"
                 },
                 "message": {
                     "type": "string"
@@ -713,13 +742,27 @@ const docTemplate = `{
                 }
             }
         },
-        "v1.IResponseBaseMulti-dto_ReadPeopleDTO": {
+        "v1.IResponseBaseMulti-dto_ReadTask": {
             "type": "object",
             "properties": {
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/dto.ReadPeopleDTO"
+                        "$ref": "#/definitions/dto.ReadTask"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1.IResponseBasePaginated-dto_ReadPeople": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.ReadPeople"
                     }
                 },
                 "message": {

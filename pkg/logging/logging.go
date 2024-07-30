@@ -34,13 +34,18 @@ func init() {
 	l := logrus.New()
 	l.SetReportCaller(true)
 	l.SetFormatter(&logrus.TextFormatter{
-		DisableColors: true,
-		DisableQuote:  true,
-		FullTimestamp: true,
+		DisableColors:   true,
+		DisableQuote:    true,
+		FullTimestamp:   false,
+		TimestampFormat: "2006-01-02 15:04:05.000",
 		CallerPrettyfier: func(frame *runtime.Frame) (function string, file string) {
 			filename := path.Base(frame.File)
 			return fmt.Sprintf("%s()", frame.Function), fmt.Sprintf("%s:%d", filename, frame.Line)
 		},
+		FieldMap: logrus.FieldMap{
+			logrus.FieldKeyTime:  "time",
+			logrus.FieldKeyLevel: "level",
+			logrus.FieldKeyMsg:   "msg"},
 	})
 	//err := os.MkdirAll("logs", 0644)
 	//if err != nil {

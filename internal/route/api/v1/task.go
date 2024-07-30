@@ -2,6 +2,7 @@ package v1
 
 import (
 	"EffectiveMobile/internal/dto"
+	"EffectiveMobile/internal/schemas"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -22,36 +23,35 @@ func (h *Handler) initTaskRouter(r *gin.RouterGroup) {
 // @Accept       json
 // @Produce      json
 // @Param name query string false "Task name"
-// @Param people query string true "Task name" format(uuid)
-// @Success 200 {object} schemas.BaseResp
-// @Failure      404  {object}	schemas.BaseResp
-// @Failure      500  {object}	schemas.BaseResp
+// @Param people query string true "People" format(uuid)
+// @Success 200 {object} IResponseBase[schemas.ResponseUUID]
+// @Failure      404  {object}	IResponseBaseErr
+// @Failure      500  {object}	IResponseBaseErr
 // @Router       /task [post]
 func (h *Handler) taskStart(c *gin.Context) {
 
 	name, _ := c.GetQuery("name")
 	uuidS, ok := c.GetQuery("people")
 	if !ok {
-		writeResp404(c, nil, "people query not matched")
+		IWriteResponseErr(c, 400, nil, "people query not matched")
 		return
 	}
 	uuid := pgtype.UUID{}
 	err := uuid.Scan(uuidS)
 	if err != nil {
-		writeResp404(c, err, "error scan people uuid")
+		IWriteResponseErr(c, 400, err, "error scan people uuid")
 		return
 	}
 
-	uuidCreated, err := h.Services.Task.StartNew(dto.CreateTaskDTO{
+	uuidCreated, err := h.Services.Task.StartNew(dto.CreateTask{
 		PeopleUUID: uuid,
 		Name:       name,
 	})
 	if err != nil {
-		writeResp500(c, err, "error on create task")
+		IWriteResponseErr(c, 500, err, "error on create task")
 		return
 	}
-
-	writeResp200(c, uuidCreated, "create task successfully")
+	IWriteResponse(c, 200, schemas.ResponseUUID{uuidCreated}, "create task successfully")
 }
 
 // taskStop godoc
@@ -61,58 +61,57 @@ func (h *Handler) taskStart(c *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Param uuid path string true "Task UUID" format(uuid)
-// @Success 200 {object} schemas.BaseResp
-// @Failure      404  {object}	schemas.BaseResp
-// @Failure      500  {object}	schemas.BaseResp
-// @Router       /task [put]
+// @Success 200 {object} IResponseBase[dto.ReadTask]
+// @Failure      404  {object}	IResponseBaseErr
+// @Failure      500  {object}	IResponseBaseErr
+// @Router       /task/{uuid} [put]
 func (h *Handler) taskStop(c *gin.Context) {
 	uuidS := c.Param("uuid")
 	uuid := pgtype.UUID{}
 	err := uuid.Scan(uuidS)
 	if err != nil {
-		writeResp404(c, err, "error scan task uuid param")
+		IWriteResponseErr(c, 400, err, "error scan task uuid param")
 		return
 	}
 
 	task, err := h.Services.Task.Stop(uuid)
 	if err != nil {
-		writeResp500(c, err, "error scan task uuid param")
+		IWriteResponseErr(c, 500, err, "error stop task")
 		return
 	}
-
-	writeResp200(c, task, "stop task successfully")
+	IWriteResponse(c, 200, task, "stop task successfully")
 }
 
 // taskListByPeople godoc
 // @Tags         Task API
-// @Summary      Stop task by uuid
-// @Description  Stop task by uuid
+// @Summary      List tasks by people
+// @Description  List tasks by people
 // @Accept       json
 // @Produce      json
 // @Param people query string true "People UUID" format(uuid)
-// @Success 200 {object} schemas.BaseResp
-// @Failure      404  {object}	schemas.BaseResp
-// @Failure      500  {object}	schemas.BaseResp
+// @Success 200 {object} IResponseBaseMulti[dto.ReadTask]
+// @Failure      404  {object}	IResponseBaseErr
+// @Failure      500  {object}	IResponseBaseErr
 // @Router       /task [get]
 func (h *Handler) taskListByPeople(c *gin.Context) {
 
 	uuidS, ok := c.GetQuery("people")
 	if !ok {
-		writeResp404(c, nil, "people query not matched")
+		IWriteResponseErr(c, 400, nil, "people query not matched")
 		return
 	}
 	uuid := pgtype.UUID{}
 	err := uuid.Scan(uuidS)
 	if err != nil {
-		writeResp404(c, err, "error scan people uuid")
+		IWriteResponseErr(c, 400, err, "error scan people uuid")
 		return
 	}
 
 	tasks, err := h.Services.Task.ListByPeople(uuid)
 	if err != nil {
-		writeResp500(c, err, "error list tasks by people")
+		IWriteResponseErr(c, 500, err, "error list tasks by people")
 		return
 	}
 
-	writeResp200(c, tasks, "people tasks read")
+	IWriteResponse(c, 200, tasks, "people tasks read")
 }

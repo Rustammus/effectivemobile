@@ -15,4 +15,5 @@ func NewHandler(services *service.Services) *Handler {
 
 func (h *Handler) Init(r *gin.RouterGroup) {
 	h.initPeopleRouter(r)
+	h.initTaskRouter(r)
 }

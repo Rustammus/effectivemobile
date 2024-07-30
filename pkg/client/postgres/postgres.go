@@ -46,7 +46,6 @@ func NewPool(ctx context.Context, cf config.Storage) (pool *pgxpool.Pool, err er
 	dsn := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s", cf.Username, cf.Password, cf.Host, cf.Port, cf.Database)
 	maxAttempts := 5
 
-	logger.Info("Connection to database")
 	ctxPool, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	pool, err = pgxpool.New(ctxPool, dsn)
@@ -63,6 +62,7 @@ func NewPool(ctx context.Context, cf config.Storage) (pool *pgxpool.Pool, err er
 			time.Sleep(time.Second)
 			continue
 		}
+		logger.Infof("Connected to database %s", cf.Database)
 		return pool, nil
 	}
 	logger.Fatalln("Failed to connect to database. Abort start app.")

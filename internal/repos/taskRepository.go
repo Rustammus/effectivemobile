@@ -7,7 +7,7 @@ import (
 )
 
 type TaskRepository interface {
-	Create(ctx context.Context, dto dto.CreateTaskDTO) (pgtype.UUID, error)
-	ListByPeopleUUID(ctx context.Context, uuid pgtype.UUID) ([]dto.ReadTaskDTO, error)
-	UpdateTaskStop(ctx context.Context, uuid pgtype.UUID) (dto.ReadTaskDTO, error)
+	Create(ctx context.Context, dto dto.CreateTask) (pgtype.UUID, error)
+	ListByPeopleUUID(ctx context.Context, uuid pgtype.UUID) ([]dto.ReadTask, error)
+	UpdateTaskStop(ctx context.Context, uuid pgtype.UUID) (dto.ReadTask, error)
 }

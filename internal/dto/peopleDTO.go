@@ -2,7 +2,7 @@ package dto
 
 import "github.com/jackc/pgx/v5/pgtype"
 
-type CreatePeopleDTO struct {
+type CreatePeople struct {
 	PassportSerie  int    `json:"passportSerie" example:"1234"`
 	PassportNumber int    `json:"passportNumber" example:"567890"`
 	Surname        string `json:"surname" example:"Иванов"`
@@ -14,7 +14,7 @@ type CreatePeopleDTO struct {
 	//CreatedAt      pgtype.Timestamptz `json:"created_at" example:"2020-01-01T00:00:00Z"`
 }
 
-type ReadPeopleDTO struct {
+type ReadPeople struct {
 	UUID           pgtype.UUID `json:"uuid" example:"550e8400-e29b-41d4-a716-446655440000"`
 	PassportSerie  int         `json:"passportSerie" example:"1234"`
 	PassportNumber int         `json:"passportNumber" example:"567890"`
@@ -27,7 +27,7 @@ type ReadPeopleDTO struct {
 	CreatedAt pgtype.Timestamptz `json:"createdAt" example:"2020-01-01T00:00:00Z" swaggertype:"string"`
 }
 
-type UpdatePeopleDTO struct {
+type UpdatePeople struct {
 	//UUID           pgtype.UUID `json:"uuid" example:"550e8400-e29b-41d4-a716-446655440000"`
 	PassportSerie  int    `json:"passportSerie" example:"1234"`
 	PassportNumber int    `json:"passportNumber" example:"567890"`
@@ -40,7 +40,7 @@ type UpdatePeopleDTO struct {
 	//CreatedAt pgtype.Timestamptz `json:"created_at" example:"2020-01-01T00:00:00Z"`
 }
 
-type FilterPeopleDTO struct {
+type FilterPeople struct {
 	UUID           pgtype.UUID `json:"uuid" example:"550e8400-e29b-41d4-a716-446655440000"`
 	PassportSerie  int         `json:"passportSerie" example:"1234"`
 	PassportNumber int         `json:"passportNumber" example:"567890"`

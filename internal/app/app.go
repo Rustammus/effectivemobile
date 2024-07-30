@@ -18,10 +18,10 @@ func Run() {
 	logger.Info("Start application")
 	conf := config.GetConfig()
 
-	migration.DoMigrate()
+	migration.NewMigrator(logger).Up()
 
-	repositories := repos.NewRepositories(crud.GetPool())
-	allService := service.NewServices(service.Deps{Repos: repositories})
+	repositories := repos.NewRepositories(logger, crud.GetPool())
+	allService := service.NewServices(service.Deps{Repos: repositories, Logger: logger})
 
 	server := gin.Default()
 	r := route.NewHandler(allService)
@@ -29,7 +29,6 @@ func Run() {
 
 	err := server.Run(fmt.Sprintf(":%s", conf.Server.Port))
 	if err != nil {
-		fmt.Println(err)
-		panic("start app failure")
+		logger.Fatalf("start application error: %s", err.Error())
 	}
 }

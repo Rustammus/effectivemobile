@@ -5,7 +5,6 @@ import (
 	"EffectiveMobile/internal/crud"
 	"EffectiveMobile/internal/dto"
 	"EffectiveMobile/internal/schemas"
-	"EffectiveMobile/internal/schemas/peopleSchemas"
 	"EffectiveMobile/pkg/logging"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -34,13 +33,13 @@ func (h *Handler) initPeopleRouter(r *gin.RouterGroup) {
 // @Description  Create people
 // @Accept       json
 // @Produce      json
-// @Param People body  peopleSchemas.RequestCreatePeople true "People base"
+// @Param People body  schemas.RequestCreatePeople true "People base"
 // @Success 200 {object} IResponseBase[schemas.ResponseUUID]
 // @Failure      404  {object}	IResponseBaseErr
 // @Failure      500  {object}	IResponseBaseErr
 // @Router       /people [post]
 func (h *Handler) peopleCreate(c *gin.Context) {
-	peopleRequest := peopleSchemas.RequestCreatePeople{}
+	peopleRequest := schemas.RequestCreatePeople{}
 
 	err := c.ShouldBindJSON(&peopleRequest)
 	if err != nil {
@@ -54,7 +53,6 @@ func (h *Handler) peopleCreate(c *gin.Context) {
 		return
 	}
 
-	//TODO pack uuid in schema struct
 	IWriteResponse(c, 200, schemas.ResponseUUID{uuid}, "people created")
 }
 
@@ -65,7 +63,7 @@ func (h *Handler) peopleCreate(c *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Param uuid path string true "People UUID" format(uuid)
-// @Success 200 {object} IResponseBase[peopleSchemas.RespPeople]
+// @Success 200 {object} IResponseBase[schemas.ResponsePeople]
 // @Failure      404  {object}	IResponseBaseErr
 // @Failure      500  {object}	IResponseBaseErr
 // @Router       /people/{uuid} [get]
@@ -73,18 +71,16 @@ func (h *Handler) peopleFindByUUID(c *gin.Context) {
 	uuid, err := scanUUIDParam(c)
 	if err != nil {
 		IWriteResponseErr(c, 400, err, "error on scan param 'uuid")
-		//writeResp404(c, err, "error on scan param 'uuid'")
 		return
 	}
 
 	peopleDTO, err := h.Services.People.FindByUUID(uuid)
 	if err != nil {
 		IWriteResponseErr(c, 500, err, "error on list people")
-		//writeResp500(c, err, "error on list people")
 		return
 	}
 	//TODO converter
-	people := peopleSchemas.RespPeople{
+	people := schemas.ResponsePeople{
 		UUID:           peopleDTO.UUID,
 		PassportSerie:  peopleDTO.PassportSerie,
 		PassportNumber: peopleDTO.PassportNumber,
@@ -96,10 +92,7 @@ func (h *Handler) peopleFindByUUID(c *gin.Context) {
 		CreatedAt:      peopleDTO.CreatedAt,
 	}
 	IWriteResponse(c, 200, people, "people found")
-	//writeResp200(c, people, "peoples found")
 }
-
-//TODO swagger pizdes
 
 // peopleListByFilter godoc
 // @Tags         People API
@@ -107,9 +100,9 @@ func (h *Handler) peopleFindByUUID(c *gin.Context) {
 // @Description  List Peoples by filter
 // @Accept       json
 // @Produce      json
-// @Param PeopleFilter query peopleSchemas.RequestFilterPeople true "People base"
+// @Param PeopleFilter query schemas.RequestFilterPeople true "People base"
 // @Param Pagination query crud.Pagination true "Pagination base"
-// @Success      200  {object}  IResponseBaseMulti[dto.ReadPeopleDTO]
+// @Success      200  {object}  IResponseBasePaginated[dto.ReadPeople]
 // @Failure      404  {object}	IResponseBaseErr
 // @Failure      500  {object}	IResponseBaseErr
 // @Router       /people [get]
@@ -119,7 +112,9 @@ func (h *Handler) peopleListByFilter(c *gin.Context) {
 	//TODO remove
 	offsetS, ok := c.GetQuery("offset")
 	limitS, ok2 := c.GetQuery("limit")
-	logging.GetLogger().Warnf("!!!DEBUG: offset=%s %v, limit=%s %v", offsetS, ok, limitS, ok2)
+	maf := c.Request.URL.Query()
+	logging.GetLogger().Warnf("!!!DEBUG: offset=%s %v, limit=%s %v; Queryes len=%d", offsetS, ok, limitS, ok2, len(maf))
+
 	//if ok && ok2 {
 	//	offsetN, err = strconv.Atoi(offsetS)
 	//	limitN, err = strconv.Atoi(limitS)
@@ -135,31 +130,27 @@ func (h *Handler) peopleListByFilter(c *gin.Context) {
 	//	}
 	//}
 
-	filter := peopleSchemas.RequestFilterPeople{}
+	filter := schemas.RequestFilterPeople{}
 	pagination := crud.Pagination{}
-	err = c.BindQuery(&filter)
+	err = c.ShouldBindQuery(&filter)
 	if err != nil {
 		IWriteResponseErr(c, 400, err, "error on bind filter queries")
-		//writeResp404(c, err, "error on bind filter queries")
 		return
 	}
 
-	err = c.BindQuery(&pagination)
+	err = c.ShouldBindQuery(&pagination)
 	if err != nil {
 		IWriteResponseErr(c, 400, err, "error on bind pagination queries")
-		//writeResp404(c, err, "error on bind filter queries")
 		return
 	}
 
 	peoples, nextPag, err := h.Services.People.FindByFilterOffset(filter, pagination)
 	if err != nil {
 		IWriteResponseErr(c, 500, err, "error on list people")
-		//writeResp500(c, err, "error on list people")
 		return
 	}
 
-	IWriteResponseMulti(c, 200, peoples, nextPag, "peoples found")
-	//writeResp200(c, resp, "peoples found")
+	IWriteResponsePaginated(c, 200, peoples, nextPag, "peoples found")
 }
 
 // peopleUpdate godoc
@@ -168,9 +159,9 @@ func (h *Handler) peopleListByFilter(c *gin.Context) {
 // @Description  Update people
 // @Accept       json
 // @Produce      json
-// @Param UpdatePeople body peopleSchemas.RequestUpdatePeople true "People base"
+// @Param UpdatePeople body schemas.RequestUpdatePeople true "People base"
 // @Param uuid path string false "People UUID" format(uuid)
-// @Success 	 200 {object} IResponseBase[peopleSchemas.RespPeople]
+// @Success 	 200 {object} IResponseBase[schemas.ResponsePeople]
 // @Failure      404  {object}	IResponseBaseErr
 // @Failure      500  {object}	IResponseBaseErr
 // @Router       /people/{uuid} [put]
@@ -178,26 +169,23 @@ func (h *Handler) peopleUpdate(c *gin.Context) {
 	uuid, err := scanUUIDParam(c)
 	if err != nil {
 		IWriteResponseErr(c, 400, err, "error on scan param 'uuid'")
-		//writeResp404(c, err, "error on scan param 'uuid'")
 		return
 	}
 
-	uPeople := peopleSchemas.RequestUpdatePeople{}
+	uPeople := schemas.RequestUpdatePeople{}
 	err = c.ShouldBindJSON(&uPeople)
 	if err != nil {
 		IWriteResponseErr(c, 400, err, "error on bind people update body")
-		//writeResp404(c, err, "error on bind people update")
 		return
 	}
 
 	peopleDTO, err := h.Services.People.UpdateByUUID(uuid, uPeople)
 	if err != nil {
 		IWriteResponseErr(c, 500, err, "error on update people")
-		//writeResp500(c, err, "error on update people")
 		return
 	}
 
-	people := peopleSchemas.RespPeople{
+	people := schemas.ResponsePeople{
 		UUID:           peopleDTO.UUID,
 		PassportSerie:  peopleDTO.PassportSerie,
 		PassportNumber: peopleDTO.PassportNumber,
@@ -210,7 +198,6 @@ func (h *Handler) peopleUpdate(c *gin.Context) {
 	}
 
 	IWriteResponse(c, 200, people, "people updated")
-	//writeResp200(c, rPeople, "peoples updated")
 }
 
 // peopleDelete godoc
@@ -228,18 +215,15 @@ func (h *Handler) peopleDelete(c *gin.Context) {
 	uuid, err := scanUUIDParam(c)
 	if err != nil {
 		IWriteResponseErr(c, 400, err, "error on scan param 'uuid'")
-		//writeResp404(c, err, "error on scan param 'uuid'")
 		return
 	}
 
 	uuid, err = h.Services.People.DeleteByUUID(uuid)
 	if err != nil {
 		IWriteResponseErr(c, 500, err, "error on delete people")
-		//writeResp500(c, err, "error on update people")
 		return
 	}
 	IWriteResponse(c, 200, schemas.ResponseUUID{uuid}, "people deleted")
-	//writeResp200(c, uuid, "peoples deleted")
 }
 
 // peopleTaskStart godoc
@@ -249,30 +233,29 @@ func (h *Handler) peopleDelete(c *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Param uuid path string true "People UUID" format(uuid)
-// @Param name query string true "Task name"
-// @Success 200 {object} schemas.BaseResp
-// @Failure      404  {object}	schemas.BaseResp
-// @Failure      500  {object}	schemas.BaseResp
+// @Param name query string false "Task name"
+// @Success 200 {object} IResponseBase[schemas.ResponseUUID]
+// @Failure      404  {object}	IResponseBaseErr
+// @Failure      500  {object}	IResponseBaseErr
 // @Router       /people/{uuid}/start-task [post]
 func (h *Handler) peopleTaskStart(c *gin.Context) {
 	//TODO nil name
 	name, _ := c.GetQuery("name")
 	uuid, err := scanUUIDParam(c)
 	if err != nil {
-		writeResp404(c, err, "error on scan param 'uuid'")
+		IWriteResponseErr(c, 400, err, "error on scan param 'uuid'")
 		return
 	}
 
-	taskUUID, err := h.Services.Task.StartNew(dto.CreateTaskDTO{
+	taskUUID, err := h.Services.Task.StartNew(dto.CreateTask{
 		PeopleUUID: uuid,
 		Name:       name,
 	})
 	if err != nil {
-		writeResp500(c, err, "error on delete people")
+		IWriteResponseErr(c, 500, err, "error on create people")
 		return
 	}
-
-	writeResp200(c, taskUUID, "people tasks read")
+	IWriteResponse(c, 200, schemas.ResponseUUID{taskUUID}, "people tasks started")
 }
 
 // peopleTaskList godoc
@@ -282,24 +265,24 @@ func (h *Handler) peopleTaskStart(c *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Param uuid path string true "People UUID" format(uuid)
-// @Success 200 {object} IResponseBase[schemas.ResponseUUID]
-// @Failure      404  {object}	schemas.BaseResp
-// @Failure      500  {object}	schemas.BaseResp
+// @Success 200 {object} IResponseBaseMulti[dto.ReadTask]
+// @Failure      404  {object}	IResponseBaseErr
+// @Failure      500  {object}	IResponseBaseErr
 // @Router       /people/{uuid}/tasks [get]
 func (h *Handler) peopleTaskList(c *gin.Context) {
 	uuid, err := scanUUIDParam(c)
 	if err != nil {
-		writeResp404(c, err, "error on scan uuid")
+		IWriteResponseErr(c, 400, err, "error on scan param 'uuid'")
 		return
 	}
 
 	tasks, err := h.Services.Task.ListByPeople(uuid)
 	if err != nil {
-		writeResp500(c, err, "error on delete people")
+		IWriteResponseErr(c, 500, err, "error on delete people")
 		return
 	}
 
-	writeResp200(c, tasks, "people tasks read")
+	IWriteResponse(c, 200, tasks, "people tasks read")
 }
 
 func scanUUIDParam(c *gin.Context) (pgtype.UUID, error) {

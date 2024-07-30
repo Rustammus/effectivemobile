@@ -7,7 +7,7 @@ definitions:
       offset:
         type: integer
     type: object
-  dto.ReadPeopleDTO:
+  dto.ReadPeople:
     properties:
       address:
         example: г. Москва, ул. Ленина, д. 5, кв. 1
@@ -38,12 +38,32 @@ definitions:
         example: 550e8400-e29b-41d4-a716-446655440000
         type: string
     type: object
-  peopleSchemas.RequestCreatePeople:
+  dto.ReadTask:
+    properties:
+      end_time:
+        example: "2020-01-01T00:00:00Z"
+        format: timestamp
+        type: string
+      name:
+        example: do nothing
+        type: string
+      people_uuid:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      start_time:
+        example: "2020-01-01T00:00:00Z"
+        format: timestamp
+        type: string
+      uuid:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+    type: object
+  schemas.RequestCreatePeople:
     properties:
       passportNumber:
         type: string
     type: object
-  peopleSchemas.RequestUpdatePeople:
+  schemas.RequestUpdatePeople:
     properties:
       address:
         example: г. Москва, ул. Ленина, д. 5, кв. 1
@@ -64,7 +84,7 @@ definitions:
         example: Иванов
         type: string
     type: object
-  peopleSchemas.RespPeople:
+  schemas.ResponsePeople:
     properties:
       address:
         example: г. Москва, ул. Ленина, д. 5, кв. 1
@@ -94,23 +114,23 @@ definitions:
         example: 550e8400-e29b-41d4-a716-446655440000
         type: string
     type: object
-  schemas.BaseResp:
-    properties:
-      data: {}
-      error: {}
-      message:
-        type: string
-    type: object
   schemas.ResponseUUID:
     properties:
       uuid:
         example: 550e8400-e29b-41d4-a716-446655440000
         type: string
     type: object
-  v1.IResponseBase-peopleSchemas_RespPeople:
+  v1.IResponseBase-dto_ReadTask:
     properties:
       data:
-        $ref: '#/definitions/peopleSchemas.RespPeople'
+        $ref: '#/definitions/dto.ReadTask'
+      message:
+        type: string
+    type: object
+  v1.IResponseBase-schemas_ResponsePeople:
+    properties:
+      data:
+        $ref: '#/definitions/schemas.ResponsePeople'
       message:
         type: string
     type: object
@@ -127,11 +147,20 @@ definitions:
       message:
         type: string
     type: object
-  v1.IResponseBaseMulti-dto_ReadPeopleDTO:
+  v1.IResponseBaseMulti-dto_ReadTask:
     properties:
       data:
         items:
-          $ref: '#/definitions/dto.ReadPeopleDTO'
+          $ref: '#/definitions/dto.ReadTask'
+        type: array
+      message:
+        type: string
+    type: object
+  v1.IResponseBasePaginated-dto_ReadPeople:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/dto.ReadPeople'
         type: array
       message:
         type: string
@@ -202,7 +231,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/v1.IResponseBaseMulti-dto_ReadPeopleDTO'
+            $ref: '#/definitions/v1.IResponseBasePaginated-dto_ReadPeople'
         "404":
           description: Not Found
           schema:
@@ -224,7 +253,7 @@ paths:
         name: People
         required: true
         schema:
-          $ref: '#/definitions/peopleSchemas.RequestCreatePeople'
+          $ref: '#/definitions/schemas.RequestCreatePeople'
       produces:
       - application/json
       responses:
@@ -289,7 +318,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/v1.IResponseBase-peopleSchemas_RespPeople'
+            $ref: '#/definitions/v1.IResponseBase-schemas_ResponsePeople'
         "404":
           description: Not Found
           schema:
@@ -311,7 +340,7 @@ paths:
         name: UpdatePeople
         required: true
         schema:
-          $ref: '#/definitions/peopleSchemas.RequestUpdatePeople'
+          $ref: '#/definitions/schemas.RequestUpdatePeople'
       - description: People UUID
         format: uuid
         in: path
@@ -323,7 +352,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/v1.IResponseBase-peopleSchemas_RespPeople'
+            $ref: '#/definitions/v1.IResponseBase-schemas_ResponsePeople'
         "404":
           description: Not Found
           schema:
@@ -350,7 +379,6 @@ paths:
       - description: Task name
         in: query
         name: name
-        required: true
         type: string
       produces:
       - application/json
@@ -358,15 +386,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/schemas.BaseResp'
+            $ref: '#/definitions/v1.IResponseBase-schemas_ResponseUUID'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/schemas.BaseResp'
+            $ref: '#/definitions/v1.IResponseBaseErr'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/schemas.BaseResp'
+            $ref: '#/definitions/v1.IResponseBaseErr'
       summary: Create and start task by People uuid
       tags:
       - People API
@@ -388,15 +416,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/v1.IResponseBase-schemas_ResponseUUID'
+            $ref: '#/definitions/v1.IResponseBaseMulti-dto_ReadTask'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/schemas.BaseResp'
+            $ref: '#/definitions/v1.IResponseBaseErr'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/schemas.BaseResp'
+            $ref: '#/definitions/v1.IResponseBaseErr'
       summary: List all tasks by People uuid
       tags:
       - People API
@@ -404,7 +432,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: Stop task by uuid
+      description: List tasks by people
       parameters:
       - description: People UUID
         format: uuid
@@ -418,16 +446,16 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/schemas.BaseResp'
+            $ref: '#/definitions/v1.IResponseBaseMulti-dto_ReadTask'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/schemas.BaseResp'
+            $ref: '#/definitions/v1.IResponseBaseErr'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/schemas.BaseResp'
-      summary: Stop task by uuid
+            $ref: '#/definitions/v1.IResponseBaseErr'
+      summary: List tasks by people
       tags:
       - Task API
     post:
@@ -439,7 +467,7 @@ paths:
         in: query
         name: name
         type: string
-      - description: Task name
+      - description: People
         format: uuid
         in: query
         name: people
@@ -451,18 +479,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/schemas.BaseResp'
+            $ref: '#/definitions/v1.IResponseBase-schemas_ResponseUUID'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/schemas.BaseResp'
+            $ref: '#/definitions/v1.IResponseBaseErr'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/schemas.BaseResp'
+            $ref: '#/definitions/v1.IResponseBaseErr'
       summary: Create and start task by People uuid
       tags:
       - Task API
+  /task/{uuid}:
     put:
       consumes:
       - application/json
@@ -480,15 +509,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/schemas.BaseResp'
+            $ref: '#/definitions/v1.IResponseBase-dto_ReadTask'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/schemas.BaseResp'
+            $ref: '#/definitions/v1.IResponseBaseErr'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/schemas.BaseResp'
+            $ref: '#/definitions/v1.IResponseBaseErr'
       summary: Stop task by uuid
       tags:
       - Task API
