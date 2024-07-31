@@ -19,7 +19,7 @@ type ReadPeople struct {
 	PassportNumber int                `json:"passportNumber" example:"567890"`
 	Surname        string             `json:"surname" example:"Иванов"`
 	Name           string             `json:"name" example:"Иван"`
-	Patronymic     string             `json:"patronymic" example:"Иванович"`
+	Patronymic     *string            `json:"patronymic" example:"Иванович"`
 	Address        string             `json:"address" example:"г. Москва, ул. Ленина, д. 5, кв. 1"`
 	UpdatedAt      pgtype.Timestamptz `json:"updatedAt" example:"2020-01-01T00:00:00Z" swaggertype:"string"`
 	CreatedAt      pgtype.Timestamptz `json:"createdAt" example:"2020-01-01T00:00:00Z" swaggertype:"string"`

@@ -1,6 +1,7 @@
 package schemas
 
 import (
+	"EffectiveMobile/internal/dto"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -28,7 +29,7 @@ func (p RequestUpdatePeople) Valid() bool {
 }
 
 type RequestFilterPeople struct {
-	UUID           pgtype.UUID `json:"uuid" form:"-" example:"550e8400-e29b-41d4-a716-446655440000" format:"uuid"`
+	UUID           pgtype.UUID `json:"uuid" example:"550e8400-e29b-41d4-a716-446655440000" format:"uuid"`
 	PassportSerie  int         `json:"passportSerie" form:"passportSerie" example:"1234"`
 	PassportNumber int         `json:"passportNumber" form:"passportNumber" example:"567890"`
 	Surname        string      `json:"surname" form:"surname" example:"Иванов"`
@@ -54,8 +55,20 @@ type ResponsePeople struct {
 	PassportNumber int                `json:"passportNumber" example:"567890"`
 	Surname        string             `json:"surname" example:"Иванов"`
 	Name           string             `json:"name" example:"Иван"`
-	Patronymic     string             `json:"patronymic" example:"Иванович"`
+	Patronymic     *string            `json:"patronymic,omitempty" example:"Иванович"`
 	Address        string             `json:"address" example:"г. Москва, ул. Ленина, д. 5, кв. 1"`
 	UpdatedAt      pgtype.Timestamptz `json:"updated_at" example:"2020-01-01T00:00:00Z" swaggertype:"string"`
 	CreatedAt      pgtype.Timestamptz `json:"created_at" example:"2020-01-01T00:00:00Z" swaggertype:"string"`
+}
+
+func (p *ResponsePeople) ScanDTO(dto dto.ReadPeople) {
+	p.UUID = dto.UUID
+	p.PassportSerie = dto.PassportSerie
+	p.PassportNumber = dto.PassportNumber
+	p.Surname = dto.Surname
+	p.Name = dto.Name
+	p.Patronymic = dto.Patronymic
+	p.Address = dto.Address
+	p.UpdatedAt = dto.UpdatedAt
+	p.CreatedAt = dto.CreatedAt
 }

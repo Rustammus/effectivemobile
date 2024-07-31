@@ -3,7 +3,9 @@ package v1
 import (
 	"EffectiveMobile/internal/dto"
 	"EffectiveMobile/internal/schemas"
+	"errors"
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -29,8 +31,12 @@ func (h *Handler) initTaskRouter(r *gin.RouterGroup) {
 // @Failure      500  {object}	IResponseBaseErr
 // @Router       /task [post]
 func (h *Handler) taskStart(c *gin.Context) {
+	nameQ, ok := c.GetQuery("name")
+	var name *string = &nameQ
+	if !ok {
+		name = nil
+	}
 
-	name, _ := c.GetQuery("name")
 	uuidS, ok := c.GetQuery("people")
 	if !ok {
 		IWriteResponseErr(c, 400, nil, "people query not matched")
@@ -41,6 +47,14 @@ func (h *Handler) taskStart(c *gin.Context) {
 	if err != nil {
 		IWriteResponseErr(c, 400, err, "error scan people uuid")
 		return
+	}
+
+	_, err = h.Services.People.FindByUUID(uuid)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			IWriteResponseErr(c, 200, err, "uuid not exist")
+			return
+		}
 	}
 
 	uuidCreated, err := h.Services.Task.StartNew(dto.CreateTask{
@@ -61,7 +75,7 @@ func (h *Handler) taskStart(c *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Param uuid path string true "Task UUID" format(uuid)
-// @Success 200 {object} IResponseBase[dto.ReadTask]
+// @Success 200 {object} IResponseBase[schemas.ResponseTask]
 // @Failure      400  {object}	IResponseBaseErr
 // @Failure      500  {object}	IResponseBaseErr
 // @Router       /task/{uuid} [put]
@@ -74,12 +88,20 @@ func (h *Handler) taskStop(c *gin.Context) {
 		return
 	}
 
-	task, err := h.Services.Task.Stop(uuid)
+	taskDTO, err := h.Services.Task.Stop(uuid)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			IWriteResponseErr(c, 200, err, "uuid not exist or task already stopped")
+			return
+		}
 		IWriteResponseErr(c, 500, err, "error stop task")
 		return
 	}
-	IWriteResponse(c, 200, task, "stop task successfully")
+
+	responseTask := schemas.ResponseTask{}
+	responseTask.ScanDTO(taskDTO)
+
+	IWriteResponse(c, 200, responseTask, "stop task successfully")
 }
 
 // taskListByPeople godoc
@@ -89,7 +111,7 @@ func (h *Handler) taskStop(c *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Param people query string true "People UUID" format(uuid)
-// @Success 200 {object} IResponseBaseMulti[dto.ReadTask]
+// @Success 200 {object} IResponseBaseMulti[schemas.ResponseTask]
 // @Failure      400  {object}	IResponseBaseErr
 // @Failure      500  {object}	IResponseBaseErr
 // @Router       /task [get]
@@ -107,11 +129,20 @@ func (h *Handler) taskListByPeople(c *gin.Context) {
 		return
 	}
 
-	tasks, err := h.Services.Task.ListByPeople(uuid)
+	tasksDTO, err := h.Services.Task.ListByPeople(uuid)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			IWriteResponseErr(c, 200, err, "uuid not exist or no tasks")
+			return
+		}
 		IWriteResponseErr(c, 500, err, "error list tasks by people")
 		return
 	}
 
-	IWriteResponse(c, 200, tasks, "people tasks read")
+	responseTasks := make([]schemas.ResponseTask, len(tasksDTO), len(tasksDTO))
+	for i := 0; i < len(tasksDTO); i++ {
+		responseTasks[i].ScanDTO(tasksDTO[i])
+	}
+
+	IWriteResponse(c, 200, responseTasks, "people tasks read")
 }

@@ -5,7 +5,9 @@ import (
 	"EffectiveMobile/internal/crud"
 	"EffectiveMobile/internal/dto"
 	"EffectiveMobile/internal/schemas"
+	"errors"
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -75,23 +77,18 @@ func (h *Handler) peopleFindByUUID(c *gin.Context) {
 
 	peopleDTO, err := h.Services.People.FindByUUID(uuid)
 	if err != nil {
-		//todo no rows response
+		if errors.Is(err, pgx.ErrNoRows) {
+			IWriteResponseErr(c, 200, err, "uuid not exist")
+			return
+		}
 		IWriteResponseErr(c, 500, err, "error on list people")
 		return
 	}
 
-	people := schemas.ResponsePeople{
-		UUID:           peopleDTO.UUID,
-		PassportSerie:  peopleDTO.PassportSerie,
-		PassportNumber: peopleDTO.PassportNumber,
-		Surname:        peopleDTO.Surname,
-		Name:           peopleDTO.Name,
-		Patronymic:     peopleDTO.Patronymic,
-		Address:        peopleDTO.Address,
-		UpdatedAt:      peopleDTO.UpdatedAt,
-		CreatedAt:      peopleDTO.CreatedAt,
-	}
-	IWriteResponse(c, 200, people, "people found")
+	responsePeople := schemas.ResponsePeople{}
+	responsePeople.ScanDTO(peopleDTO)
+
+	IWriteResponse(c, 200, responsePeople, "people found")
 }
 
 // peopleListByFilter godoc
@@ -102,7 +99,7 @@ func (h *Handler) peopleFindByUUID(c *gin.Context) {
 // @Produce      json
 // @Param PeopleFilter query schemas.RequestFilterPeople true "People base"
 // @Param Pagination query crud.Pagination true "Pagination base"
-// @Success      200  {object}  IResponseBasePaginated[dto.ReadPeople]
+// @Success      200  {object}  IResponseBasePaginated[schemas.ResponsePeople]
 // @Failure      400  {object}	IResponseBaseErr
 // @Failure      500  {object}	IResponseBaseErr
 // @Router       /people [get]
@@ -139,24 +136,36 @@ func (h *Handler) peopleListByFilter(c *gin.Context) {
 		pagination.Offset = 0
 	}
 
+	var peoples []dto.ReadPeople
+	var nextPag crud.Pagination
 	if !filter.Valid() {
-		peoples, nextPag, err := h.Services.People.FindAllByOffset(pagination)
+		peoples, nextPag, err = h.Services.People.FindAllByOffset(pagination)
 		if err != nil {
-			//todo no rows response
+			if errors.Is(err, pgx.ErrNoRows) {
+				IWriteResponseErr(c, 200, err, "no peoples found")
+				return
+			}
 			IWriteResponseErr(c, 500, err, "error on list people")
 			return
 		}
-		IWriteResponsePaginated(c, 200, peoples, nextPag, "peoples found")
+	} else {
+		peoples, nextPag, err = h.Services.People.FindByFilterOffset(filter, pagination)
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				IWriteResponseErr(c, 200, err, "no peoples found by filter")
+				return
+			}
+			IWriteResponseErr(c, 500, err, "error on list people")
+			return
+		}
 	}
 
-	peoples, nextPag, err := h.Services.People.FindByFilterOffset(filter, pagination)
-	if err != nil {
-		//todo no rows response
-		IWriteResponseErr(c, 500, err, "error on list people")
-		return
+	responsePeoples := make([]schemas.ResponsePeople, len(peoples), len(peoples))
+	for i := 0; i < len(peoples); i++ {
+		responsePeoples[i].ScanDTO(peoples[i])
 	}
-	//todo response []schema?
-	IWriteResponsePaginated(c, 200, peoples, nextPag, "peoples found")
+
+	IWriteResponsePaginated(c, 200, responsePeoples, nextPag, "peoples found by filter")
 }
 
 // peopleUpdate godoc
@@ -191,24 +200,18 @@ func (h *Handler) peopleUpdate(c *gin.Context) {
 
 	peopleDTO, err := h.Services.People.UpdateByUUID(uuid, uPeople)
 	if err != nil {
-		//todo no rows response
+		if errors.Is(err, pgx.ErrNoRows) {
+			IWriteResponseErr(c, 200, err, "uuid not exist")
+			return
+		}
 		IWriteResponseErr(c, 500, err, "error on update people")
 		return
 	}
 
-	people := schemas.ResponsePeople{
-		UUID:           peopleDTO.UUID,
-		PassportSerie:  peopleDTO.PassportSerie,
-		PassportNumber: peopleDTO.PassportNumber,
-		Surname:        peopleDTO.Surname,
-		Name:           peopleDTO.Name,
-		Patronymic:     peopleDTO.Patronymic,
-		Address:        peopleDTO.Address,
-		UpdatedAt:      peopleDTO.UpdatedAt,
-		CreatedAt:      peopleDTO.CreatedAt,
-	}
+	responsePeople := schemas.ResponsePeople{}
+	responsePeople.ScanDTO(peopleDTO)
 
-	IWriteResponse(c, 200, people, "people updated")
+	IWriteResponse(c, 200, responsePeople, "people updated")
 }
 
 // peopleDelete godoc
@@ -231,7 +234,10 @@ func (h *Handler) peopleDelete(c *gin.Context) {
 
 	uuid, err = h.Services.People.DeleteByUUID(uuid)
 	if err != nil {
-		//todo no rows response
+		if errors.Is(err, pgx.ErrNoRows) {
+			IWriteResponseErr(c, 200, err, "uuid not exist")
+			return
+		}
 		IWriteResponseErr(c, 500, err, "error on delete people")
 		return
 	}
@@ -251,13 +257,24 @@ func (h *Handler) peopleDelete(c *gin.Context) {
 // @Failure      500  {object}	IResponseBaseErr
 // @Router       /people/{uuid}/start-task [post]
 func (h *Handler) peopleTaskStart(c *gin.Context) {
-	//TODO nil name
-	//TODO check people exist
-	name, _ := c.GetQuery("name")
+	nameQ, ok := c.GetQuery("name")
+	var name *string = &nameQ
+	if !ok {
+		name = nil
+	}
+
 	uuid, err := scanUUIDParam(c)
 	if err != nil {
 		IWriteResponseErr(c, 400, err, "error on scan param 'uuid'")
 		return
+	}
+
+	_, err = h.Services.People.FindByUUID(uuid)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			IWriteResponseErr(c, 200, err, "uuid not exist")
+			return
+		}
 	}
 
 	taskUUID, err := h.Services.Task.StartNew(dto.CreateTask{
@@ -265,7 +282,7 @@ func (h *Handler) peopleTaskStart(c *gin.Context) {
 		Name:       name,
 	})
 	if err != nil {
-		IWriteResponseErr(c, 500, err, "error on create people")
+		IWriteResponseErr(c, 500, err, "error on create task")
 		return
 	}
 	IWriteResponse(c, 200, schemas.ResponseUUID{taskUUID}, "people tasks started")
@@ -278,7 +295,7 @@ func (h *Handler) peopleTaskStart(c *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Param uuid path string true "People UUID" format(uuid)
-// @Success 200 {object} IResponseBaseMulti[dto.ReadTask]
+// @Success 200 {object} IResponseBaseMulti[schemas.ResponseTask]
 // @Failure      400  {object}	IResponseBaseErr
 // @Failure      500  {object}	IResponseBaseErr
 // @Router       /people/{uuid}/tasks [get]
@@ -289,14 +306,22 @@ func (h *Handler) peopleTaskList(c *gin.Context) {
 		return
 	}
 
-	tasks, err := h.Services.Task.ListByPeople(uuid)
+	tasksDTO, err := h.Services.Task.ListByPeople(uuid)
 	if err != nil {
-		//todo no rows response
-		IWriteResponseErr(c, 500, err, "error on delete people")
+		if errors.Is(err, pgx.ErrNoRows) {
+			IWriteResponseErr(c, 200, err, "uuid not exist or no tasks found")
+			return
+		}
+		IWriteResponseErr(c, 500, err, "error on list people tasksDTO")
 		return
 	}
 
-	IWriteResponse(c, 200, tasks, "people tasks read")
+	responseTasks := make([]schemas.ResponseTask, len(tasksDTO), len(tasksDTO))
+	for i := 0; i < len(tasksDTO); i++ {
+		responseTasks[i].ScanDTO(tasksDTO[i])
+	}
+
+	IWriteResponse(c, 200, responseTasks, "people tasksDTO read")
 }
 
 func scanUUIDParam(c *gin.Context) (pgtype.UUID, error) {

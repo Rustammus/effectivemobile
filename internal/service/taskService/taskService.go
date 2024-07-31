@@ -16,6 +16,7 @@ type TaskService struct {
 }
 
 func (r *TaskService) StartNew(dto dto.CreateTask) (pgtype.UUID, error) {
+
 	uuid, err := r.Repo.Create(context.TODO(), dto)
 	if err != nil {
 		r.Logger.Infof("error on create task %s", err.Error())
@@ -30,7 +31,7 @@ func (r *TaskService) Stop(uuid pgtype.UUID) (dto.ReadTask, error) {
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			r.Logger.Debugf("no rows updated by uuid: %x", uuid.Bytes)
-			return dto.ReadTask{}, errors.New("no rows updated by uuid")
+			return dto.ReadTask{}, err
 		}
 		r.Logger.Infof("error on stop task %s", err.Error())
 		return dto.ReadTask{}, err
@@ -44,7 +45,7 @@ func (r *TaskService) ListByPeople(uuid pgtype.UUID) ([]dto.ReadTask, error) {
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			r.Logger.Debugf("no rows found by people: %x", uuid.Bytes)
-			return nil, errors.New("no rows found by people")
+			return nil, err
 		}
 		r.Logger.Infof("error on list tasks by people %s", err.Error())
 		return nil, err

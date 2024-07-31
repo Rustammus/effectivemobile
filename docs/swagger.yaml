@@ -7,57 +7,6 @@ definitions:
       offset:
         type: integer
     type: object
-  dto.ReadPeople:
-    properties:
-      address:
-        example: г. Москва, ул. Ленина, д. 5, кв. 1
-        type: string
-      createdAt:
-        example: "2020-01-01T00:00:00Z"
-        type: string
-      name:
-        example: Иван
-        type: string
-      passportNumber:
-        example: 567890
-        type: integer
-      passportSerie:
-        example: 1234
-        type: integer
-      patronymic:
-        example: Иванович
-        type: string
-      surname:
-        example: Иванов
-        type: string
-      updatedAt:
-        description: IsDeleted      bool               `json:"is_deleted" example:"false"`
-        example: "2020-01-01T00:00:00Z"
-        type: string
-      uuid:
-        example: 550e8400-e29b-41d4-a716-446655440000
-        type: string
-    type: object
-  dto.ReadTask:
-    properties:
-      end_time:
-        example: "2020-01-01T00:00:00Z"
-        format: timestamp
-        type: string
-      name:
-        example: do nothing
-        type: string
-      people_uuid:
-        example: 550e8400-e29b-41d4-a716-446655440000
-        type: string
-      start_time:
-        example: "2020-01-01T00:00:00Z"
-        format: timestamp
-        type: string
-      uuid:
-        example: 550e8400-e29b-41d4-a716-446655440000
-        type: string
-    type: object
   schemas.RequestCreatePeople:
     properties:
       passportNumber:
@@ -114,23 +63,44 @@ definitions:
         example: 550e8400-e29b-41d4-a716-446655440000
         type: string
     type: object
+  schemas.ResponseTask:
+    properties:
+      hours:
+        example: 25
+        type: integer
+      isStopped:
+        example: true
+        type: boolean
+      minutes:
+        example: 59
+        type: integer
+      name:
+        example: do nothing
+        type: string
+      people_uuid:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      uuid:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+    type: object
   schemas.ResponseUUID:
     properties:
       uuid:
         example: 550e8400-e29b-41d4-a716-446655440000
         type: string
     type: object
-  v1.IResponseBase-dto_ReadTask:
-    properties:
-      data:
-        $ref: '#/definitions/dto.ReadTask'
-      message:
-        type: string
-    type: object
   v1.IResponseBase-schemas_ResponsePeople:
     properties:
       data:
         $ref: '#/definitions/schemas.ResponsePeople'
+      message:
+        type: string
+    type: object
+  v1.IResponseBase-schemas_ResponseTask:
+    properties:
+      data:
+        $ref: '#/definitions/schemas.ResponseTask'
       message:
         type: string
     type: object
@@ -143,24 +113,25 @@ definitions:
     type: object
   v1.IResponseBaseErr:
     properties:
-      error: {}
+      error:
+        type: string
       message:
         type: string
     type: object
-  v1.IResponseBaseMulti-dto_ReadTask:
+  v1.IResponseBaseMulti-schemas_ResponseTask:
     properties:
       data:
         items:
-          $ref: '#/definitions/dto.ReadTask'
+          $ref: '#/definitions/schemas.ResponseTask'
         type: array
       message:
         type: string
     type: object
-  v1.IResponseBasePaginated-dto_ReadPeople:
+  v1.IResponseBasePaginated-schemas_ResponsePeople:
     properties:
       data:
         items:
-          $ref: '#/definitions/dto.ReadPeople'
+          $ref: '#/definitions/schemas.ResponsePeople'
         type: array
       message:
         type: string
@@ -231,7 +202,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/v1.IResponseBasePaginated-dto_ReadPeople'
+            $ref: '#/definitions/v1.IResponseBasePaginated-schemas_ResponsePeople'
         "400":
           description: Bad Request
           schema:
@@ -416,7 +387,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/v1.IResponseBaseMulti-dto_ReadTask'
+            $ref: '#/definitions/v1.IResponseBaseMulti-schemas_ResponseTask'
         "400":
           description: Bad Request
           schema:
@@ -446,7 +417,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/v1.IResponseBaseMulti-dto_ReadTask'
+            $ref: '#/definitions/v1.IResponseBaseMulti-schemas_ResponseTask'
         "400":
           description: Bad Request
           schema:
@@ -509,7 +480,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/v1.IResponseBase-dto_ReadTask'
+            $ref: '#/definitions/v1.IResponseBase-schemas_ResponseTask'
         "400":
           description: Bad Request
           schema:

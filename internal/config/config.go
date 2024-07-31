@@ -14,6 +14,7 @@ type Config struct {
 		ExternalURL  string `yaml:"external_url" env:"APP_EXTERNAL_URL"`
 		MigrationDir string `yaml:"migration_dir" env:"APP_MIGRATION_DIR"`
 		MaxRowLimit  int    `yaml:"max_row_limit" env:"APP_MAX_ROW_LIMIT"`
+		LogLevel     string `yaml:"log_level" env:"APP_LOG_LEVEL"`
 	} `yaml:"server"`
 	Storage `yaml:"storage"`
 }
@@ -39,14 +40,14 @@ func GetConfig() *Config {
 			logger.Info("env: CONFIG_FILE not set. Default: \".env\"")
 		}
 
-		logger.Debugf("Try to read config file %s", confPath)
+		logger.Infof("Try to read config file %s", confPath)
 		instance = &Config{}
 		err := cleanenv.ReadConfig(confPath, instance)
 		if err != nil {
 			logger.Fatal("Failed to read config file. Abort start app.\n\t", err.Error())
 		}
 		configJSON, _ := json.Marshal(&instance)
-		logger.Debug("Config file read. Config: ", string(configJSON))
+		logger.Info("Config file read. Config: ", string(configJSON))
 	})
 	return instance
 }

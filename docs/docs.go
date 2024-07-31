@@ -96,7 +96,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/v1.IResponseBasePaginated-dto_ReadPeople"
+                            "$ref": "#/definitions/v1.IResponseBasePaginated-schemas_ResponsePeople"
                         }
                     },
                     "400": {
@@ -374,7 +374,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/v1.IResponseBaseMulti-dto_ReadTask"
+                            "$ref": "#/definitions/v1.IResponseBaseMulti-schemas_ResponseTask"
                         }
                     },
                     "400": {
@@ -419,7 +419,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/v1.IResponseBaseMulti-dto_ReadTask"
+                            "$ref": "#/definitions/v1.IResponseBaseMulti-schemas_ResponseTask"
                         }
                     },
                     "400": {
@@ -513,7 +513,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/v1.IResponseBase-dto_ReadTask"
+                            "$ref": "#/definitions/v1.IResponseBase-schemas_ResponseTask"
                         }
                     },
                     "400": {
@@ -541,75 +541,6 @@ const docTemplate = `{
                 },
                 "offset": {
                     "type": "integer"
-                }
-            }
-        },
-        "dto.ReadPeople": {
-            "type": "object",
-            "properties": {
-                "address": {
-                    "type": "string",
-                    "example": "г. Москва, ул. Ленина, д. 5, кв. 1"
-                },
-                "createdAt": {
-                    "type": "string",
-                    "example": "2020-01-01T00:00:00Z"
-                },
-                "name": {
-                    "type": "string",
-                    "example": "Иван"
-                },
-                "passportNumber": {
-                    "type": "integer",
-                    "example": 567890
-                },
-                "passportSerie": {
-                    "type": "integer",
-                    "example": 1234
-                },
-                "patronymic": {
-                    "type": "string",
-                    "example": "Иванович"
-                },
-                "surname": {
-                    "type": "string",
-                    "example": "Иванов"
-                },
-                "updatedAt": {
-                    "description": "IsDeleted      bool               ` + "`" + `json:\"is_deleted\" example:\"false\"` + "`" + `",
-                    "type": "string",
-                    "example": "2020-01-01T00:00:00Z"
-                },
-                "uuid": {
-                    "type": "string",
-                    "example": "550e8400-e29b-41d4-a716-446655440000"
-                }
-            }
-        },
-        "dto.ReadTask": {
-            "type": "object",
-            "properties": {
-                "end_time": {
-                    "type": "string",
-                    "format": "timestamp",
-                    "example": "2020-01-01T00:00:00Z"
-                },
-                "name": {
-                    "type": "string",
-                    "example": "do nothing"
-                },
-                "people_uuid": {
-                    "type": "string",
-                    "example": "550e8400-e29b-41d4-a716-446655440000"
-                },
-                "start_time": {
-                    "type": "string",
-                    "format": "timestamp",
-                    "example": "2020-01-01T00:00:00Z"
-                },
-                "uuid": {
-                    "type": "string",
-                    "example": "550e8400-e29b-41d4-a716-446655440000"
                 }
             }
         },
@@ -691,6 +622,35 @@ const docTemplate = `{
                 }
             }
         },
+        "schemas.ResponseTask": {
+            "type": "object",
+            "properties": {
+                "hours": {
+                    "type": "integer",
+                    "example": 25
+                },
+                "isStopped": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "minutes": {
+                    "type": "integer",
+                    "example": 59
+                },
+                "name": {
+                    "type": "string",
+                    "example": "do nothing"
+                },
+                "people_uuid": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "uuid": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                }
+            }
+        },
         "schemas.ResponseUUID": {
             "type": "object",
             "properties": {
@@ -700,22 +660,22 @@ const docTemplate = `{
                 }
             }
         },
-        "v1.IResponseBase-dto_ReadTask": {
+        "v1.IResponseBase-schemas_ResponsePeople": {
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/dto.ReadTask"
+                    "$ref": "#/definitions/schemas.ResponsePeople"
                 },
                 "message": {
                     "type": "string"
                 }
             }
         },
-        "v1.IResponseBase-schemas_ResponsePeople": {
+        "v1.IResponseBase-schemas_ResponseTask": {
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/schemas.ResponsePeople"
+                    "$ref": "#/definitions/schemas.ResponseTask"
                 },
                 "message": {
                     "type": "string"
@@ -736,19 +696,21 @@ const docTemplate = `{
         "v1.IResponseBaseErr": {
             "type": "object",
             "properties": {
-                "error": {},
+                "error": {
+                    "type": "string"
+                },
                 "message": {
                     "type": "string"
                 }
             }
         },
-        "v1.IResponseBaseMulti-dto_ReadTask": {
+        "v1.IResponseBaseMulti-schemas_ResponseTask": {
             "type": "object",
             "properties": {
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/dto.ReadTask"
+                        "$ref": "#/definitions/schemas.ResponseTask"
                     }
                 },
                 "message": {
@@ -756,13 +718,13 @@ const docTemplate = `{
                 }
             }
         },
-        "v1.IResponseBasePaginated-dto_ReadPeople": {
+        "v1.IResponseBasePaginated-schemas_ResponsePeople": {
             "type": "object",
             "properties": {
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/dto.ReadPeople"
+                        "$ref": "#/definitions/schemas.ResponsePeople"
                     }
                 },
                 "message": {

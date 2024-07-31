@@ -18,13 +18,10 @@ func (c *TaskCRUD) Create(ctx context.Context, dto dto.CreateTask) (pgtype.UUID,
 	q := `INSERT INTO public.tasks (people_uuid, name, start_time) 
 		  VALUES ($1, $2, CURRENT_TIMESTAMP(0)) 
 		  RETURNING uuid`
-	var row pgx.Row
+
+	row := c.client.QueryRow(ctx, q, dto.PeopleUUID, dto.Name)
+
 	uuid := pgtype.UUID{}
-	if len(dto.Name) > 0 {
-		row = c.client.QueryRow(ctx, q, dto.PeopleUUID, dto.Name)
-	} else {
-		row = c.client.QueryRow(ctx, q, dto.PeopleUUID, nil)
-	}
 	err := row.Scan(&uuid)
 	if err != nil {
 		return pgtype.UUID{}, err
@@ -52,7 +49,11 @@ func (c *TaskCRUD) ListByPeopleUUID(ctx context.Context, uuid pgtype.UUID) ([]dt
 		}
 		tasks = append(tasks, task)
 	}
-	return tasks, nil
+
+	if len(tasks) == 0 {
+		return nil, pgx.ErrNoRows
+	}
+	return tasks, err
 }
 
 func (c *TaskCRUD) UpdateTaskStop(ctx context.Context, uuid pgtype.UUID) (dto.ReadTask, error) {
