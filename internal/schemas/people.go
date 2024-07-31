@@ -17,6 +17,16 @@ type RequestUpdatePeople struct {
 	Address        *string `json:"address" example:"г. Москва, ул. Ленина, д. 5, кв. 1"`
 }
 
+func (p RequestUpdatePeople) Valid() bool {
+	ok := p.PassportSerie != nil ||
+		p.PassportNumber != nil ||
+		p.Surname != nil ||
+		p.Name != nil ||
+		p.Patronymic != nil ||
+		p.Address != nil
+	return ok
+}
+
 type RequestFilterPeople struct {
 	UUID           pgtype.UUID `json:"uuid" form:"-" example:"550e8400-e29b-41d4-a716-446655440000" format:"uuid"`
 	PassportSerie  int         `json:"passportSerie" form:"passportSerie" example:"1234"`
@@ -25,6 +35,17 @@ type RequestFilterPeople struct {
 	Name           string      `json:"name" form:"name" example:"Иван"`
 	Patronymic     string      `json:"patronymic" form:"patronymic" example:"Иванович"`
 	Address        string      `json:"address" form:"address" example:"г. Москва, ул. Ленина, д. 5, кв. 1"`
+}
+
+func (p RequestFilterPeople) Valid() bool {
+	ok := p.UUID.Valid ||
+		p.PassportSerie > 0 ||
+		p.PassportNumber > 0 ||
+		len(p.Surname) > 0 ||
+		len(p.Name) > 0 ||
+		len(p.Patronymic) > 0 ||
+		len(p.Address) > 0
+	return ok
 }
 
 type ResponsePeople struct {

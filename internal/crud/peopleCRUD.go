@@ -5,6 +5,7 @@ import (
 	"EffectiveMobile/pkg/client/postgres"
 	"EffectiveMobile/pkg/logging"
 	"context"
+	"errors"
 	"fmt"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -80,16 +81,11 @@ func (c *PeopleCRUD) FindByFilterOffset(ctx context.Context, filter dto.FilterPe
 	query := `SELECT uuid, passport_serie, passport_number, surname, name, patronymic, address, updated_at, created_at 
 			  FROM public.peoples WHERE`
 
-	//TODO refactor me!
 	values, query := c.buildWhereCondition(query, filter)
 	counter := len(values)
 	if counter == 0 {
-		//TODO is that ok?
-		peoples, err := c.FindAllByOffset(ctx, pag)
-		if err != nil {
-			return nil, err
-		}
-		return peoples, nil
+		c.logger.Error("got empty people filter")
+		return nil, errors.New("empty people filter")
 	}
 	query = fmt.Sprintf("%s OFFSET $%d LIMIT $%d", query, counter+1, counter+2)
 	values = append(values, pag.Offset, pag.Limit)
@@ -218,7 +214,7 @@ func (c *PeopleCRUD) buildUpdateValues(baseQuery string, uuid pgtype.UUID, p dto
 		setR = append(setR, fmt.Sprintf("$%d", counter))
 		values = append(values, p.Address)
 	}
-	//TODO nothing to update error
+
 	counter++
 	setL = append(setL, "updated_at")
 	setR = append(setR, "CURRENT_TIMESTAMP(0)")

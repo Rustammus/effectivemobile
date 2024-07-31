@@ -26,7 +26,6 @@ type PeopleService struct {
 }
 
 func (r *PeopleService) Create(p schemas.RequestCreatePeople) (pgtype.UUID, error) {
-	//TODO change schema to dto?
 	pass := strings.Split(p.PassportNumber, " ")
 	if len(pass) < 2 {
 		return pgtype.UUID{}, errors.New("error in passportNumber - not enough substrings. Example: '1234 567890'")
@@ -41,6 +40,10 @@ func (r *PeopleService) Create(p schemas.RequestCreatePeople) (pgtype.UUID, erro
 	if err != nil {
 		r.Logger.Infof("Error on request people info: %s", err)
 		return pgtype.UUID{}, err
+	}
+
+	if !people.Valid() {
+		return pgtype.UUID{}, errors.New("requested people info is not valid or empty")
 	}
 
 	peopleCreate := dto.CreatePeople{
@@ -66,7 +69,7 @@ func (r *PeopleService) requestPeopleInfo(passportSerie, passportNumber int) (ex
 	conf := config.GetConfig()
 	urlBase := conf.Server.ExternalURL
 	people := externalApi.ExResponsePeople{}
-	//TODO refactor this
+	//TODO refactor this?
 	url := fmt.Sprintf("%s/info?passportSerie=%d&passportNumber=%d", urlBase, passportSerie, passportNumber)
 
 	client := http.DefaultClient
@@ -77,7 +80,7 @@ func (r *PeopleService) requestPeopleInfo(passportSerie, passportNumber int) (ex
 		r.Logger.Errorf("error on get request people info; passport: %d %d. %s", passportSerie, passportNumber, err.Error())
 		return externalApi.ExResponsePeople{}, err
 	}
-	//TODO check content nul
+	//TODO check content empty
 	data := make([]byte, response.ContentLength-1)
 	_, err = response.Body.Read(data)
 	if err != nil {
@@ -106,8 +109,6 @@ func (r *PeopleService) FindByUUID(uuid pgtype.UUID) (dto.ReadPeople, error) {
 	r.Logger.Debugf("people find by uuid: %+v", people)
 	return people, nil
 }
-
-//TODO use this method
 
 func (r *PeopleService) FindAllByOffset(pag crud.Pagination) ([]dto.ReadPeople, crud.Pagination, error) {
 	peoples, err := r.Repo.FindAllByOffset(context.TODO(), pag)

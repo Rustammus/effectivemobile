@@ -75,10 +75,11 @@ func (h *Handler) peopleFindByUUID(c *gin.Context) {
 
 	peopleDTO, err := h.Services.People.FindByUUID(uuid)
 	if err != nil {
+		//todo no rows response
 		IWriteResponseErr(c, 500, err, "error on list people")
 		return
 	}
-	//TODO converter
+
 	people := schemas.ResponsePeople{
 		UUID:           peopleDTO.UUID,
 		PassportSerie:  peopleDTO.PassportSerie,
@@ -138,12 +139,23 @@ func (h *Handler) peopleListByFilter(c *gin.Context) {
 		pagination.Offset = 0
 	}
 
+	if !filter.Valid() {
+		peoples, nextPag, err := h.Services.People.FindAllByOffset(pagination)
+		if err != nil {
+			//todo no rows response
+			IWriteResponseErr(c, 500, err, "error on list people")
+			return
+		}
+		IWriteResponsePaginated(c, 200, peoples, nextPag, "peoples found")
+	}
+
 	peoples, nextPag, err := h.Services.People.FindByFilterOffset(filter, pagination)
 	if err != nil {
+		//todo no rows response
 		IWriteResponseErr(c, 500, err, "error on list people")
 		return
 	}
-
+	//todo response []schema?
 	IWriteResponsePaginated(c, 200, peoples, nextPag, "peoples found")
 }
 
@@ -172,9 +184,14 @@ func (h *Handler) peopleUpdate(c *gin.Context) {
 		IWriteResponseErr(c, 400, err, "error on bind people update body")
 		return
 	}
+	if !uPeople.Valid() {
+		IWriteResponseErr(c, 400, err, "update people body required")
+		return
+	}
 
 	peopleDTO, err := h.Services.People.UpdateByUUID(uuid, uPeople)
 	if err != nil {
+		//todo no rows response
 		IWriteResponseErr(c, 500, err, "error on update people")
 		return
 	}
@@ -214,6 +231,7 @@ func (h *Handler) peopleDelete(c *gin.Context) {
 
 	uuid, err = h.Services.People.DeleteByUUID(uuid)
 	if err != nil {
+		//todo no rows response
 		IWriteResponseErr(c, 500, err, "error on delete people")
 		return
 	}
@@ -234,6 +252,7 @@ func (h *Handler) peopleDelete(c *gin.Context) {
 // @Router       /people/{uuid}/start-task [post]
 func (h *Handler) peopleTaskStart(c *gin.Context) {
 	//TODO nil name
+	//TODO check people exist
 	name, _ := c.GetQuery("name")
 	uuid, err := scanUUIDParam(c)
 	if err != nil {
@@ -272,6 +291,7 @@ func (h *Handler) peopleTaskList(c *gin.Context) {
 
 	tasks, err := h.Services.Task.ListByPeople(uuid)
 	if err != nil {
+		//todo no rows response
 		IWriteResponseErr(c, 500, err, "error on delete people")
 		return
 	}

@@ -5,12 +5,12 @@ import (
 )
 
 type CreatePeople struct {
-	PassportSerie  int    `json:"passportSerie" example:"1234"`
-	PassportNumber int    `json:"passportNumber" example:"567890"`
-	Surname        string `json:"surname" example:"Иванов"`
-	Name           string `json:"name" example:"Иван"`
-	Patronymic     string `json:"patronymic" example:"Иванович"`
-	Address        string `json:"address" example:"г. Москва, ул. Ленина, д. 5, кв. 1"`
+	PassportSerie  int     `json:"passportSerie" example:"1234"`
+	PassportNumber int     `json:"passportNumber" example:"567890"`
+	Surname        *string `json:"surname" example:"Иванов"`
+	Name           *string `json:"name" example:"Иван"`
+	Patronymic     *string `json:"patronymic" example:"Иванович"`
+	Address        *string `json:"address" example:"г. Москва, ул. Ленина, д. 5, кв. 1"`
 }
 
 type ReadPeople struct {
